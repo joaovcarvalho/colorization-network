@@ -1,37 +1,19 @@
-from keras.models import Sequential
-from keras.layers import Conv2D, Dropout
+from model import ColorfyModelFactory
 from keras.utils import Sequence
 from keras.callbacks import Callback
 import numpy as np
-from cv2 import resize, imread
+from preprocessing import ColorfyPreprocessing
 import os
 import cv2
 
 directory = 'data/'
-files = [f for (dir, subdirs, fs) in os.walk(directory) for f in fs if f.endswith(".jpg")]
+files = [f for (_, _, fs) in os.walk(directory) for f in fs if f.endswith(".jpg")]
 
 # input image dimensions
 img_rows, img_cols = 128, 128
 input_shape = (img_rows, img_cols)
 
-
-def get_gray_image(image):
-    l_channel, a_channel, b_channel = cv2.split(image)
-    return l_channel
-
-
-def get_color_image(image):
-    l_channel, a_channel, b_channel = cv2.split(image)
-    return cv2.merge([a_channel, b_channel])
-
-
-def preprocess_image(file_name):
-    image = imread(directory + file_name)
-    if image is not None:
-        lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-        return resize(lab_image, (128, 128))
-    else:
-        return None
+preprocessor = ColorfyPreprocessing(directory, input_shape, cv2.COLOR_BGR2LAB)
 
 
 class ImageNetSequence(Sequence):
@@ -45,18 +27,19 @@ class ImageNetSequence(Sequence):
 
     def __getitem__(self, idx):
         images = []
+        gray_images = []
+        color_images = []
 
         i = 0
         while len(images) < self.batch_size:
             next_file_path = self.x[idx*self.batch_size + i]
 
-            image = preprocess_image(next_file_path)
+            image = preprocessor.process(next_file_path)
             if image is not None:
                 images.append(image)
+                gray_images.append(preprocessor.get_gray_image())
+                color_images.append(preprocessor.get_color_image())
             i += 1
-
-        gray_images = list(map(lambda x: get_gray_image(x), images))
-        color_images = list(map(lambda x: get_color_image(x), images))
 
         gray_images, color_images = np.array(gray_images).reshape((self.batch_size, 128, 128, 1)), \
                                     np.array(color_images).reshape((self.batch_size, 128, 128, 2))
@@ -71,18 +54,12 @@ class WeightsSaver(Callback):
 
     def on_batch_end(self, batch, logs={}):
         if self.batch % self.N == 0:
-            name = 'weights%08d.h5' % self.batch
+            name = 'weights/weights%08d.h5' % self.batch
             self.model.save_weights(name)
         self.batch += 1
 
 
-model = Sequential()
-
-model.add(Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=(128, 128, 1), padding="same"))
-model.add(Conv2D(64, (3, 3), activation='relu', padding="same"))
-model.add(Dropout(0.25))
-model.add(Conv2D(2, (3, 3), activation='relu', padding="same"))
-
+model = ColorfyModelFactory((128, 128, 1)).get_model()
 
 # For a mean squared error regression problem
 model.compile(optimizer='adam', loss='mse')

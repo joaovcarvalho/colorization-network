@@ -1,2 +1,6 @@
 data/
 *.bash
+weights/
+
+*.pyc
+.DS_Store
