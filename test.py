@@ -4,6 +4,7 @@ import cv2
 import sys
 import numpy as np
 from model import ColorfyModelFactory
+from matplotlib import pyplot as plt
 
 directory = 'data/'
 files = [f for (_, _, fs) in os.walk(directory) for f in fs if f.endswith(".jpg")]
@@ -24,7 +25,6 @@ for i in range(20):
         continue
 
     original_bgr = cv2.cvtColor(image, cv2.COLOR_LAB2BGR)
-    print(image.shape)
 
     gray = preprocessor.get_gray_image()
 
@@ -34,16 +34,33 @@ for i in range(20):
 
     a = a.reshape((128, 128, 1))
     b = b.reshape((128, 128, 1))
+
+    a *= 127
+    b *= 127
+
     gray = gray.reshape((128, 128, 1))
+
+    gray *= 100
 
     colorized = np.concatenate((gray, a, b), axis=2)
     colorized = cv2.cvtColor(colorized, cv2.COLOR_LAB2BGR)
 
     gray = cv2.cvtColor(original_bgr, cv2.COLOR_BGR2GRAY)
-    bgr_gray = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
-    before_after = np.concatenate((bgr_gray, colorized), axis=1)
+    # bgr_gray = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+    # before_after = np.concatenate((bgr_gray, colorized), axis=1)
 
-    print(before_after.shape)
+    # hist = cv2.calcHist([colorized], [0], None, [256], [0, 256])
 
-    cv2.imshow('gray', before_after)
+    # histr, _ = np.histogram(a, 255, (-127, 127))
+    # plt.plot(histr, color='r')
+
+    # histr, _ = np.histogram(b, 256, [-127, 127])
+    # plt.plot(histr, color='g')
+    #
+    # plt.xlim([-127, 127])
+    #
+    # plt.show()
+
+    # cv2.imshow('gray', gray)
+    cv2.imshow('colorized', colorized)
     cv2.waitKey(0)

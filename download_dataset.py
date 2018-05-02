@@ -1,6 +1,5 @@
 import sys
 import urllib
-import os.path
 from multiprocessing import Pool
 from os import listdir
 from os.path import isfile, join

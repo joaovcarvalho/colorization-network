@@ -4,3 +4,5 @@ weights/
 
 *.pyc
 .DS_Store
+colorfy
+.idea/
