@@ -25,8 +25,8 @@ preprocessor = ColorfyPreprocessing(input_shape, cv2.COLOR_BGR2LAB)
 
 
 data_generation = ImageDataGenerator(
-    featurewise_center=True,
-    featurewise_std_normalization=True,
+    # featurewise_center=True,
+    # featurewise_std_normalization=True,
     # rotation_range=20,
     # width_shift_range=0.2,
     # height_shift_range=0.2,
@@ -42,12 +42,12 @@ train_size = x_train.shape[0]
 test_size = x_test.shape[0]
 
 
-def get_lab_image(x):
-    return cv2.cvtColor(x, cv2.COLOR_RGB2LAB)
-
-
-x_train = [get_lab_image(image) for image in x_train]
-x_test = [get_lab_image(image) for image in x_test]
+# def get_lab_image(x):
+#     return cv2.cvtColor(x, cv2.COLOR_RGB2LAB)
+#
+#
+# x_train = [get_lab_image(image) for image in x_train]
+# x_test = [get_lab_image(image) for image in x_test]
 
 y_train = x_train
 y_test = x_test
@@ -57,43 +57,35 @@ x_test = np.array(x_test).reshape(test_size, img_rows, img_cols, 3)
 
 data_generation.fit(x_train)
 
-x_test = x_test[:20]
-y_test = y_test[:20]
+choices = np.random.choice(x_test.shape[0], 20)
+x_test = [ x for (index, x) in enumerate(x_test) if index in choices]
+# y_test = y_test[:20]
 
-batches = 0
-for x_batch, _ in data_generation.flow(x_test, y_test, batch_size=1):
-    x = x_batch[0, :, :, 0]
-    x = x.reshape(1, img_rows, img_cols, 1)
+for x in x_test:
+    x = cv2.cvtColor(x, cv2.COLOR_RGB2GRAY)
+    x = np.array(x).reshape(1, img_rows, img_cols, 1)
 
     result = model.predict(x)
 
-    std = data_generation.std[0, 0]
-    mean = data_generation.mean[0, 0]
+    x = x.reshape(img_rows, img_cols, 1)
 
-    x = x * std[0] + mean[0]
+    color_space = result[0]
 
-    ab_space = result[0]
+    b = color_space[:, :, 0]
+    g = color_space[:, :, 1]
+    r = color_space[:, :, 2]
 
-    a = ab_space[:, :, 0] * std[1] + mean[1]
-    b = ab_space[:, :, 1] * std[2] + mean[2]
-
-    a = a.reshape((img_rows, img_cols, 1))
+    r = r.reshape((img_rows, img_cols, 1))
+    g = g.reshape((img_rows, img_cols, 1))
     b = b.reshape((img_rows, img_cols, 1))
 
-    gray = x[0]
-    colorized = np.concatenate((gray, a, b), axis=2)
-    colorized = cv2.cvtColor(colorized, cv2.COLOR_LAB2BGR)
+    print(r.shape, g.shape, b.shape)
+
+    colorized = np.concatenate((b, g, r), axis=2)
     colorized = cv2.resize(colorized, (256, 256))
 
-    gray = cv2.cvtColor(colorized, cv2.COLOR_BGR2GRAY)
+    x = cv2.resize(x, (256, 256))
 
-    cv2.imshow('gray', gray)
+    cv2.imshow('gray', x)
     cv2.imshow('colorized', colorized)
     cv2.waitKey(0)
-
-    batches += 1
-    if batches >= len(x_test) / 1:
-        # we need to break the loop by hand because
-        # the generator loops indefinitely
-        break
-
