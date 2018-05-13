@@ -9,6 +9,7 @@ import sys
 import numpy as np
 from model import ColorfyModelFactory
 from matplotlib import pyplot as plt
+import datetime
 
 directory = 'data/'
 files = [f for (_, _, fs) in os.walk(directory) for f in fs if f.endswith(".jpg")]
@@ -57,11 +58,16 @@ x_test = np.array(x_test).reshape(test_size, img_rows, img_cols, 3)
 
 data_generation.fit(x_train)
 
-choices = np.random.choice(x_test.shape[0], 20)
+choices = np.random.choice(x_test.shape[0], 10)
 x_test = [ x for (index, x) in enumerate(x_test) if index in choices]
 
-for x in x_test:
-    x = cv2.cvtColor(x, cv2.COLOR_RGB2GRAY)
+OUTPUT_SIZE = (64,64)
+
+final_test_image = None
+
+for original in x_test:
+    original = original.reshape(32, 32, 3)
+    x = cv2.cvtColor(original, cv2.COLOR_RGB2GRAY)
     x = np.array(x).reshape(1, img_rows, img_cols, 1).astype(float)
 
     x /= 255
@@ -86,11 +92,27 @@ for x in x_test:
     b = b.reshape((img_rows, img_cols, 1))
 
     colorized = np.concatenate((b, g, r), axis=2)
-    colorized = cv2.resize(colorized, (256, 256))
+    colorized *= 255
+    colorized = colorized.astype('uint8')
+    colorized = cv2.resize(colorized, OUTPUT_SIZE)
 
     x += 0.5
-    x = cv2.resize(x, (256, 256))
+    x *= 255
+    x = cv2.resize(x.astype('uint8'), OUTPUT_SIZE).reshape(OUTPUT_SIZE[0], OUTPUT_SIZE[1], 1)
+    
+    x = cv2.cvtColor(x, cv2.COLOR_GRAY2BGR)
+    
+    original = cv2.resize(original, OUTPUT_SIZE).astype('uint8')
 
-    cv2.imshow('gray', x)
-    cv2.imshow('colorized', colorized)
-    cv2.waitKey(0)
+    result = np.append(x, colorized, axis=1)
+    result = np.append(result, original, axis=1)
+
+    if final_test_image is not None:
+        final_test_image = np.append(final_test_image, result, axis=0)
+    else:
+        final_test_image = result
+
+import time
+timestr = time.strftime("%Y%m%d_%H%M%S")
+
+cv2.imwrite('results/results_{}.png'.format(timestr), final_test_image)
