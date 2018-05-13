@@ -7,7 +7,7 @@ KERNEL_INITIALIZER = "glorot_normal"
 CNN_ACTIVATION = 'relu'
 
 def add_conv_layers(how_many, model):
-    min_convolutions = 64
+    min_convolutions = 32
     max_covolutions = 512
     for i in range(how_many):
         iteration = how_many - 1 - i
@@ -30,7 +30,7 @@ class ColorfyModelFactory(object):
                          kernel_initializer=KERNEL_INITIALIZER))
 
         # Hidden Layers
-        add_conv_layers(10, model)
+        add_conv_layers(20, model)
 
         # Output layer
         model.add(Conv2D(3, (3, 3), activation=CNN_ACTIVATION, padding="same", kernel_initializer=KERNEL_INITIALIZER))
