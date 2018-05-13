@@ -59,11 +59,13 @@ data_generation.fit(x_train)
 
 choices = np.random.choice(x_test.shape[0], 20)
 x_test = [ x for (index, x) in enumerate(x_test) if index in choices]
-# y_test = y_test[:20]
 
 for x in x_test:
     x = cv2.cvtColor(x, cv2.COLOR_RGB2GRAY)
-    x = np.array(x).reshape(1, img_rows, img_cols, 1)
+    x = np.array(x).reshape(1, img_rows, img_cols, 1).astype(float)
+
+    x /= 255
+    x -= 0.5
 
     result = model.predict(x)
 
@@ -75,15 +77,18 @@ for x in x_test:
     g = color_space[:, :, 1]
     r = color_space[:, :, 2]
 
+    b += 0.5
+    g += 0.5
+    r += 0.5
+
     r = r.reshape((img_rows, img_cols, 1))
     g = g.reshape((img_rows, img_cols, 1))
     b = b.reshape((img_rows, img_cols, 1))
 
-    print(r.shape, g.shape, b.shape)
-
     colorized = np.concatenate((b, g, r), axis=2)
     colorized = cv2.resize(colorized, (256, 256))
 
+    x += 0.5
     x = cv2.resize(x, (256, 256))
 
     cv2.imshow('gray', x)
