@@ -30,7 +30,7 @@ class ColorfyModelFactory(object):
                          kernel_initializer=KERNEL_INITIALIZER))
 
         # Hidden Layers
-        add_conv_layers(20, model)
+        add_conv_layers(10, model)
 
         # Output layer
         model.add(Conv2D(3, (3, 3), activation=CNN_ACTIVATION, padding="same", kernel_initializer=KERNEL_INITIALIZER))
