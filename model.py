@@ -12,7 +12,12 @@ def add_conv_layers(how_many, model):
     for i in range(how_many):
         iteration = how_many - 1 - i
         depth = max(min_convolutions, min(max_covolutions, 2**iteration))
-        model.add(Conv2D(depth, (3, 3), activation=CNN_ACTIVATION, padding="same", kernel_initializer=KERNEL_INITIALIZER, kernel_regularizer=l2(0.)))
+        model.add(Conv2D(depth, (3, 3), 
+            activation=CNN_ACTIVATION, 
+            padding="same", 
+            kernel_initializer=KERNEL_INITIALIZER, 
+            kernel_regularizer=l2(0.)
+            ))
 
 class ColorfyModelFactory(object):
     def __init__(self, input_shape):

@@ -37,7 +37,7 @@ y_test = x_test
 x_train = np.array(x_train).reshape(train_size, img_rows, img_cols, 3)
 x_test = np.array(x_test).reshape(test_size, img_rows, img_cols, 3)
 
-NUM_EPOCHS = 5
+NUM_EPOCHS = 10
 BATCH_SIZE = 32
 SAVE_MODEL_EVERY_N_BATCHES = 10
 
