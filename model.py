@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import Conv2D, Dropout, UpSampling2D, AveragePooling2D
+from keras.layers import Conv2D, Dropout, UpSampling2D, AveragePooling2D, BatchNormalization
 from keras.regularizers import l2
 
 DROPOUT_RATE = 0.5
@@ -18,6 +18,7 @@ def add_conv_layers(how_many, model):
             kernel_initializer=KERNEL_INITIALIZER, 
             kernel_regularizer=l2(0.)
             ))
+        model.add(BatchNormalization())
 
 class ColorfyModelFactory(object):
     def __init__(self, input_shape):
