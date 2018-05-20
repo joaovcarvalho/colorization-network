@@ -6,4 +6,5 @@ weights/
 .DS_Store
 colorfy
 .idea/
-Graph/
+graph/
+results/
