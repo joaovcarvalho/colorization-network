@@ -5,6 +5,7 @@ from keras.regularizers import l2
 DROPOUT_RATE = 0.5
 KERNEL_INITIALIZER = "glorot_normal"
 CNN_ACTIVATION = 'relu'
+OUTPUT_CHANNELS = 2
 
 def add_conv_layers(how_many, model):
     min_convolutions = 32
@@ -39,6 +40,6 @@ class ColorfyModelFactory(object):
         add_conv_layers(10, model)
 
         # Output layer
-        model.add(Conv2D(3, (3, 3), activation=CNN_ACTIVATION, padding="same", kernel_initializer=KERNEL_INITIALIZER))
+        model.add(Conv2D(OUTPUT_CHANNELS, (3, 3), activation=CNN_ACTIVATION, padding="same", kernel_initializer=KERNEL_INITIALIZER))
 
         return model

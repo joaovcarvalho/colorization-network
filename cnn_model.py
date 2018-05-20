@@ -37,7 +37,7 @@ y_test = x_test
 x_train = np.array(x_train).reshape(train_size, img_rows, img_cols, 3)
 x_test = np.array(x_test).reshape(test_size, img_rows, img_cols, 3)
 
-NUM_EPOCHS = 10
+NUM_EPOCHS = 5
 BATCH_SIZE = 32
 SAVE_MODEL_EVERY_N_BATCHES = 10
 
@@ -51,7 +51,7 @@ tbCallBack = TensorBoard(log_dir='./graph',
 callbacks = [WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES), tbCallBack]
 
 gray_images = np.array([cv2.cvtColor(x, cv2.COLOR_BGR2GRAY) for x in x_train]).reshape(train_size, img_rows, img_cols, 1).astype(float)
-color_images = x_train.astype(float)
+color_images = np.array([cv2.cvtColor(x, cv2.COLOR_BGR2LAB)[:,:,1:] for x in x_train]).reshape(train_size, img_rows, img_cols, 2).astype(float)
 
 gray_images /= 255
 color_images /= 255
@@ -60,12 +60,3 @@ gray_images -= .5
 color_images -= .5
 
 history = model.fit(gray_images, color_images, validation_split=0.1, epochs=NUM_EPOCHS, callbacks=callbacks, batch_size=BATCH_SIZE)
-
-# summarize history for loss
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.savefig('learning_curve.png')
