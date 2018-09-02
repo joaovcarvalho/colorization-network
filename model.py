@@ -7,7 +7,7 @@ from keras.applications import VGG19
 DROPOUT_RATE = 0.5
 KERNEL_INITIALIZER = "glorot_normal"
 CNN_ACTIVATION = 'relu'
-OUTPUT_CHANNELS = 2
+OUTPUT_CHANNELS = 144
 
 
 def add_conv_layer(depth, x, add_batch=True):

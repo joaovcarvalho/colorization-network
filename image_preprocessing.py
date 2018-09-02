@@ -23,6 +23,8 @@ from functools import partial
 
 from keras import backend as K
 
+from quantization import quantize_lab_image
+
 try:
     from PIL import ImageEnhance
     from PIL import Image as pil_image
@@ -829,9 +831,10 @@ class ColorizationDirectoryIterator(Iterator):
 
     def _get_batches_of_transformed_samples(self, index_array):
         CHANNELS_SIZE = 1
+        BINS_SIZE = 12
 
         batch_x = np.zeros((len(index_array),) + self.target_size + (CHANNELS_SIZE,), dtype=K.floatx())
-        original_x = np.zeros((len(index_array),) + self.target_size + (2,), dtype=K.floatx())
+        original_x = np.zeros((len(index_array),) + self.target_size + (BINS_SIZE**2,), dtype=K.floatx())
         # build batch of image data
         for i, j in enumerate(index_array):
             fname = self.filenames[j]
@@ -857,9 +860,8 @@ class ColorizationDirectoryIterator(Iterator):
             x = cv2.cvtColor(x, cv2.COLOR_BGR2LAB)\
                 .reshape(self.target_size + (3,))
 
-            final_size = self.target_size + (2,)
-            original_x[i] = x[:, :, 1:]\
-                .reshape(final_size)
+            quantum = quantize_lab_image(x, BINS_SIZE, 255)
+            original_x[i] = quantum
 
             x = self.image_data_generator.random_transform(x)
             x = self.image_data_generator.standardize(x)

@@ -18,9 +18,9 @@ def quantize_lab_image(lab_image, bins, max_value):
 
     indexes = ab_channels[:, :, 0] + ab_channels[:, :, 1]
 
-    image_shape = lab_image.shape
+    image_shape = ab_channels.shape
 
-    final_result = np.zeros(image_shape + (bins**2,))
+    final_result = np.zeros((image_shape[0], image_shape[1]) + (bins**2,))
 
     for i in range(image_shape[0]):
         for j in range(image_shape[1]):
@@ -36,7 +36,7 @@ def convert_quantization_to_image(quantization, bins):
     # type: (np.ndarray, int) -> np.ndarray
     image_shape = (quantization.shape[0], quantization.shape[1])
 
-    indexes = np.argmax(quantization[:, :, :], axis=3)[:, :, 0]
+    indexes = np.argmax(quantization, axis=2)
     a_channel = (indexes // bins) + 1
     b_channel = (indexes % bins) + 1
 

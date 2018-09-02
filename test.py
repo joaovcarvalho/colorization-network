@@ -9,6 +9,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from loader import ColorfyImageLoader
 from model import ColorfyModelFactory
 from preprocessing import ColorfyPreprocessing
+from quantization import convert_quantization_to_image
 
 directory = 'data/'
 files = [f for (_, _, fs) in os.walk(directory) for f in fs if f.endswith(".jpg")]
@@ -61,7 +62,7 @@ for original in x_test:
 
     x = x.reshape(img_rows, img_cols, 1)
 
-    color_space = result[0]
+    color_space = convert_quantization_to_image(result[0], 12)
 
     a = color_space[:, :, 0]
     b = color_space[:, :, 1]
