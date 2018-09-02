@@ -4,9 +4,10 @@ from keras.utils import Sequence
 
 class ImagesPathSequence(Sequence):
 
-    def __init__(self, x_set, batch_size, preprocessor):
+    def __init__(self, x_set, batch_size, loader, preprocessor):
         self.x = x_set
         self.batch_size = batch_size
+        self.loader = loader
         self.preprocessor = preprocessor
 
     def __len__(self):
@@ -25,7 +26,8 @@ class ImagesPathSequence(Sequence):
                 except IndexError:
                     break
 
-                image = self.preprocessor.process(next_file_path)
+                raw_image = self.loader.load_image(next_file_path)
+                image = self.preprocessor.process(raw_image)
                 if image is not None:
                     images.append(image)
                     gray_images.append(self.preprocessor.get_gray_image())

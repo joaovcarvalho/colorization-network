@@ -6,3 +6,7 @@ weights/
 .DS_Store
 colorfy
 .idea/
+graph/
+results/
+imagenet/
+imagenet_train.out
