@@ -8,3 +8,5 @@ colorfy
 .idea/
 graph/
 results/
+imagenet/
+imagenet_train.out

@@ -1,30 +1,17 @@
 from keras.datasets import cifar10
-from keras.preprocessing.image import ImageDataGenerator
-
-from image_path_sequence import ImagesPathSequence
-# from loader import ColorfyImageLoader
 from weights_saver_callback import WeightsSaverCallback
 from keras.callbacks import TensorBoard
-from model import ColorfyModelFactory
-from preprocessing import ColorfyPreprocessing
-import os
-import cv2
+from autoencoder_model import AutoEncoderFactory
 import numpy as np
-
-directory = 'data/'
-files = [f for (_, _, fs) in os.walk(directory) for f in fs if f.endswith(".jpg")]
 
 # input image dimensions
 img_rows, img_cols = 32, 32
 input_shape = (img_rows, img_cols)
 
-# loader = ColorfyImageLoader(directory)
-# preprocessor = ColorfyPreprocessing(input_shape, cv2.COLOR_BGR2LAB)
-
-model = ColorfyModelFactory((img_rows, img_cols, 1)).get_model()
+model = AutoEncoderFactory((img_rows, img_cols, 3)).get_model()
 
 # For a mean squared error regression problem
-model.compile(optimizer='adam', loss='mse')
+model.compile(optimizer='adadelta', loss='mse')
 
 (x_train, _), (x_test, _) = cifar10.load_data()
 
@@ -38,7 +25,7 @@ x_train = np.array(x_train).reshape(train_size, img_rows, img_cols, 3)
 x_test = np.array(x_test).reshape(test_size, img_rows, img_cols, 3)
 
 NUM_EPOCHS = 10
-BATCH_SIZE = 128
+BATCH_SIZE = 32
 SAVE_MODEL_EVERY_N_BATCHES = 10
 
 tbCallBack = TensorBoard(log_dir='./graph',
@@ -50,17 +37,16 @@ tbCallBack = TensorBoard(log_dir='./graph',
 
 callbacks = [WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES), tbCallBack]
 
-gray_images = np.array([cv2.cvtColor(x, cv2.COLOR_BGR2GRAY) for x in x_train]).reshape(train_size, img_rows, img_cols,
-                                                                                       1).astype(float)
-color_images = x_train.astype(float)
+input_images = x_train.astype(float)
+output_images = x_train.astype(float)
 
-gray_images /= 255
-color_images /= 255
+input_images /= 255
+output_images /= 255
 
-gray_images -= .5
-color_images -= .5
+input_images -= .5
+output_images -= .5
 
-history = model.fit(gray_images, color_images,
+history = model.fit(input_images, output_images,
                     validation_split=0.1,
                     epochs=NUM_EPOCHS,
                     callbacks=callbacks,
