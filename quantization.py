@@ -7,7 +7,7 @@ import cv2
 
 
 def quantize_lab_image(lab_image, bins, max_value):
-    # type: (np.ndarray, int) -> np.ndarray
+    # type: (np.ndarray, int, int) -> np.ndarray
 
     ab_channels = lab_image[:, :, 1:]
 
@@ -37,6 +37,7 @@ def convert_quantization_to_image(quantization, bins):
     image_shape = (quantization.shape[0], quantization.shape[1])
 
     indexes = np.argmax(quantization, axis=2)
+    print(np.unique(indexes))
     a_channel = (indexes // bins) + 1
     b_channel = (indexes % bins) + 1
 
