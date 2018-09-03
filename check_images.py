@@ -1,3 +1,6 @@
+from tempfile import TemporaryFile
+
+import cv2
 import multiprocessing
 import os
 from functools import partial
@@ -6,6 +9,7 @@ import numpy as np
 from PIL import Image
 
 from image_preprocessing import _count_valid_files_in_directory, _list_valid_filenames_in_directory
+from quantization import quantize_lab_image
 
 directory = 'imagenet'
 
@@ -45,16 +49,39 @@ for res in results:
     i += len(classes)
 
 
+lock = multiprocessing.Lock()
+
+NUM_BINS = 12
+
+final_sum = np.zeros((NUM_BINS**2))
+pixels_count = 0
+
+
 def check_image(filename, directory):
+    global final_sum, pixels_count
+    print(filename)
+
     final_path = os.path.join(directory, filename)
     try:
-        Image.open(final_path)
+        image = Image.open(final_path)
+        x = np.asarray(image)
+        quantum = quantize_lab_image(x, NUM_BINS, 255)
+        image_shape = x.shape
+
+        with lock:
+            for i in range(image_shape[0]):
+                for j in range(image_shape[1]):
+                    pixel_distribution = quantum[i, j]
+                    final_sum = final_sum + pixel_distribution
+                    pixels_count += 1.0
+
     except IOError:
-        try:
-            print('Removing file -> {}'.format(filename))
-            os.remove(final_path)
-        except OSError:
-            pass
+        pass
 
 
 pool.map(partial(check_image, directory=directory), filenames)
+pool.join()
+
+weights = final_sum / pixels_count
+print(weights)
+np.save('weights', weights)
