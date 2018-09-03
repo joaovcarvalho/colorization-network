@@ -10,7 +10,7 @@ CNN_ACTIVATION = 'relu'
 OUTPUT_CHANNELS = 144
 
 
-def add_conv_layer(depth, x, add_batch=True):
+def add_conv_layer(depth, x, add_batch=False):
     x = Conv2D(
         depth,
         (5, 5),
@@ -49,18 +49,24 @@ class ColorfyModelFactory(object):
         net_input = Input(shape=self.input_shape, name='net_input')
 
         # Input Layer
-        x = Conv2D(256,
+        x = Conv2D(64,
                    kernel_size=(3, 3),
                    activation=CNN_ACTIVATION,
                    padding="same",
                    kernel_initializer=KERNEL_INITIALIZER)(net_input)
 
-        x = add_conv_layer(256, x, add_batch=False)
-        x = add_conv_layer(128, x, )
-        x = add_conv_layer(64, x, )
-        x = add_conv_layer(32, x, add_batch=False)
-        x = add_conv_layer(32, x, )
-        x = add_conv_layer(16, x, )
+        x = add_conv_layer(64, x)
+        x = add_conv_layer(64, x, add_batch=True)
+        x = add_conv_layer(128, x)
+        x = add_conv_layer(128, x, add_batch=True)
+        x = add_conv_layer(256, x)
+        x = add_conv_layer(256, x)
+        x = add_conv_layer(256, x, add_batch=True)
+        x = add_conv_layer(512, x)
+        x = add_conv_layer(512, x)
+        x = add_conv_layer(512, x, add_batch=True)
+        x = add_conv_layer(256, x)
+        x = add_conv_layer(128, x)
 
         # Output layer
         x = Conv2D(OUTPUT_CHANNELS, (3, 3), activation=CNN_ACTIVATION, padding="same", kernel_initializer=KERNEL_INITIALIZER)(x)
