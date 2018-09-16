@@ -1,6 +1,3 @@
-from tempfile import TemporaryFile
-
-import cv2
 import multiprocessing
 import os
 from functools import partial
@@ -56,6 +53,8 @@ NUM_BINS = 12
 final_sum = np.zeros((NUM_BINS**2))
 pixels_count = 0
 
+PRINT_EVERY_N_PIXELS = 10000
+
 
 def check_image(filename, directory):
     global final_sum, pixels_count
@@ -68,14 +67,24 @@ def check_image(filename, directory):
         quantum = quantize_lab_image(x, NUM_BINS, 255)
         image_shape = x.shape
 
-        with lock:
-            for i in range(image_shape[0]):
-                for j in range(image_shape[1]):
+        for i in range(image_shape[0]):
+            for j in range(image_shape[1]):
+                try:
                     pixel_distribution = quantum[i, j]
-                    final_sum = final_sum + pixel_distribution
-                    pixels_count += 1.0
+                    with lock:
+                        final_sum = final_sum + pixel_distribution
+                        pixels_count += 1.0
+
+                        if pixels_count % PRINT_EVERY_N_PIXELS == 0:
+                            weights = final_sum / pixels_count
+                            np.save('weights', weights)
+
+                except IndexError:
+                    pass
 
     except IOError:
+        pass
+    except IndexError:
         pass
 
 
@@ -83,5 +92,4 @@ pool.map(partial(check_image, directory=directory), filenames)
 pool.join()
 
 weights = final_sum / pixels_count
-print(weights)
 np.save('weights', weights)

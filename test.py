@@ -62,20 +62,24 @@ for original in x_test:
 
     x = x.reshape(img_rows, img_cols, 1)
 
-    color_space = convert_quantization_to_image(result[0], 12)
+    color_space = convert_quantization_to_image(result[0], 12, 255)
+    color_space -= 128
 
     a = color_space[:, :, 0]
     b = color_space[:, :, 1]
 
-    a = b.reshape((img_rows, img_cols, 1))
+    a = a.reshape((img_rows, img_cols, 1))
     b = b.reshape((img_rows, img_cols, 1))
 
+    x *= 100
+
     colorized = np.concatenate((x, a, b), axis=2)
-    colorized *= 255
-    colorized = colorized.astype('uint8')
+    colorized = colorized.astype('float32')
     colorized = cv2.resize(colorized, OUTPUT_SIZE)
 
+    x /= 100
     x *= 255
+
     x = cv2.resize(x.astype('uint8'), OUTPUT_SIZE).reshape(OUTPUT_SIZE[0], OUTPUT_SIZE[1], 1)
     x = cv2.cvtColor(x, cv2.COLOR_GRAY2BGR)
 
@@ -93,4 +97,6 @@ import time
 
 timestr = time.strftime("%Y%m%d_%H%M%S")
 
+# cv2.imshow('test', final_test_image)
+# cv2.waitKey(0)
 cv2.imwrite('results/results_{}.png'.format(timestr), final_test_image)
