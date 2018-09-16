@@ -831,7 +831,7 @@ class ColorizationDirectoryIterator(Iterator):
 
     def _get_batches_of_transformed_samples(self, index_array):
         CHANNELS_SIZE = 1
-        BINS_SIZE = 12
+        BINS_SIZE = 16
 
         batch_x = np.zeros((len(index_array),) + self.target_size + (CHANNELS_SIZE,), dtype=K.floatx())
         original_x = np.zeros((len(index_array),) + self.target_size + (BINS_SIZE**2,), dtype=K.floatx())
@@ -867,6 +867,8 @@ class ColorizationDirectoryIterator(Iterator):
             x = self.image_data_generator.standardize(x)
 
             batch_size = self.target_size + (CHANNELS_SIZE,)
+
+            # Get only L channel from lab image
             batch_x[i] = x[:, :, 0].reshape(batch_size)
         # optionally save augmented images to disk for debugging purposes
         if self.save_to_dir:
