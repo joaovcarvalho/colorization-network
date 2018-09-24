@@ -4,6 +4,7 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 from keras.callbacks import TensorBoard
+import keras.backend as K
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
 
@@ -17,19 +18,35 @@ from image_preprocessing import ColorizationDirectoryIterator
 from model import ColorfyModelFactory
 from weights_saver_callback import WeightsSaverCallback
 
-TARGET_SIZE = (32, 32)
+TARGET_SIZE = (64, 64)
 
-NUM_EPOCHS = 10
+NUM_EPOCHS = 5
 BATCH_SIZE = 32
-STEPS_PER_EPOCH = 20000
-VALIDATION_STEPS = 2000
+STEPS_PER_EPOCH = 10000
+VALIDATION_STEPS = 10000
 SAVE_MODEL_EVERY_N_BATCHES = 10
 
 model = ColorfyModelFactory(TARGET_SIZE + (1,)).get_model()
 model.summary()
 
+weights = np.load('weights.npy')
+weights = 1 - weights
+weights_v = K.constant(weights)
+
+
+def colorize_loss(y_true, y_pred):
+    global weights_v
+    # mse = K.square(y_true - y_pred)
+    # sum = K.sum(mse, axis=(1, 2))
+    mult = y_pred * y_true
+    sum = K.sum(mult, axis=(1, 2))
+    weighted_sum = sum * weights_v
+    final_loss = K.sum(weighted_sum)
+    return final_loss
+
+
 # For a mean squared error regression problem
-model.compile(optimizer='adam', loss='mse')
+model.compile(optimizer='adam', loss="mse")
 
 train_datagen = ImageDataGenerator(
         rescale=1./255,
@@ -66,5 +83,5 @@ model.fit_generator(
         epochs=NUM_EPOCHS,
         validation_data=validation_generator,
         validation_steps=VALIDATION_STEPS,
-        callbacks=callbacks
+        callbacks=callbacks,
 )

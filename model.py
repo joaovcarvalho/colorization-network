@@ -7,38 +7,23 @@ from keras.applications import VGG19
 DROPOUT_RATE = 0.5
 KERNEL_INITIALIZER = "glorot_normal"
 CNN_ACTIVATION = 'relu'
-OUTPUT_CHANNELS = 144
+OUTPUT_CHANNELS = 256
 
 
-def add_conv_layer(depth, x, add_batch=False):
+def add_conv_layer(depth, x, add_batch=False, strides=1, dilation_rate=1, kernel_size = 5):
     x = Conv2D(
         depth,
-        (5, 5),
+        (kernel_size, kernel_size),
         activation=CNN_ACTIVATION,
         padding="same",
+        strides=strides,
+        dilation_rate=dilation_rate,
         kernel_initializer=KERNEL_INITIALIZER,
         kernel_regularizer=l2(0.01)
     )(x)
     if add_batch:
         x = BatchNormalization()(x)
     return x
-
-
-def add_conv_layers(how_many, model):
-    min_convolutions = 32
-    max_covolutions = 512
-    for i in range(how_many):
-        iteration = how_many - 1 - i
-        depth = max(min_convolutions, min(max_covolutions, 2**iteration))
-        model.add(Conv2D(
-            depth,
-            (3, 3),
-            activation=CNN_ACTIVATION,
-            padding="same",
-            kernel_initializer=KERNEL_INITIALIZER,
-            kernel_regularizer=l2(0.)
-            ))
-        model.add(BatchNormalization())
 
 
 class ColorfyModelFactory(object):
@@ -56,20 +41,24 @@ class ColorfyModelFactory(object):
                    kernel_initializer=KERNEL_INITIALIZER)(net_input)
 
         x = add_conv_layer(64, x)
-        x = add_conv_layer(64, x, add_batch=True)
-        x = add_conv_layer(128, x)
-        x = add_conv_layer(128, x, add_batch=True)
+        x = add_conv_layer(64, x, add_batch=True, strides=2)
+        x = add_conv_layer(128, x, kernel_size=7)
+        x = add_conv_layer(128, x, add_batch=True, strides=2)
         x = add_conv_layer(256, x)
-        x = add_conv_layer(256, x)
-        x = add_conv_layer(256, x, add_batch=True)
-        x = add_conv_layer(512, x)
-        x = add_conv_layer(512, x)
+        x = add_conv_layer(256, x, add_batch=True, strides=2)
+        x = add_conv_layer(512, x, kernel_size=3)
         x = add_conv_layer(512, x, add_batch=True)
-        x = add_conv_layer(256, x)
-        x = add_conv_layer(128, x)
+        x = UpSampling2D()(x)
+        x = add_conv_layer(256, x, kernel_size=3)
+        x = UpSampling2D()(x)
+        x = add_conv_layer(128, x, kernel_size=3)
+        x = UpSampling2D()(x)
 
         # Output layer
-        x = Conv2D(OUTPUT_CHANNELS, (3, 3), activation=CNN_ACTIVATION, padding="same", kernel_initializer=KERNEL_INITIALIZER)(x)
+        x = Conv2D(OUTPUT_CHANNELS, (1, 1),
+                   activation=CNN_ACTIVATION,
+                   padding="same",
+                   kernel_initializer=KERNEL_INITIALIZER)(x)
 
         model = Model(inputs=net_input, outputs=x)
 

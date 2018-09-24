@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 # plt.bar(x, weights)
 # plt.show()
 from quantization import convert_quantization_to_image
+import time
 
 BINS = 14
 HOW_MANY_POSSIBLE_VALUES = BINS ** 2
@@ -23,6 +24,9 @@ example_image = np.zeros((HOW_MANY_POSSIBLE_VALUES, HOW_MANY_L, HOW_MANY_POSSIBL
 for i in range(HOW_MANY_POSSIBLE_VALUES):
     for j in range(HOW_MANY_L):
         example_image[i, j, i] = 1.0
+
+final_sum = np.zeros((BINS**2))
+pixels_count = 0
 
 color_space = convert_quantization_to_image(example_image, BINS, 256)
 x = np.zeros((HOW_MANY_POSSIBLE_VALUES, HOW_MANY_L, 1))

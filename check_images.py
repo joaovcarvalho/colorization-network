@@ -1,5 +1,6 @@
 import multiprocessing
 import os
+import traceback
 from functools import partial
 
 import numpy as np
@@ -45,19 +46,24 @@ for res in results:
     filenames += filenames
     i += len(classes)
 
+pool.close()
+pool.join()
+
+pool = multiprocessing.pool.ThreadPool()
 
 lock = multiprocessing.Lock()
 
-NUM_BINS = 12
+NUM_BINS = 16
 
 final_sum = np.zeros((NUM_BINS**2))
 pixels_count = 0
+image_count = 0
 
-PRINT_EVERY_N_PIXELS = 10000
+PRINT_EVERY_N_IMAGES = 100
 
 
 def check_image(filename, directory):
-    global final_sum, pixels_count
+    global final_sum, pixels_count, image_count
     print(filename)
 
     final_path = os.path.join(directory, filename)
@@ -65,29 +71,23 @@ def check_image(filename, directory):
         image = Image.open(final_path)
         x = np.asarray(image)
         quantum = quantize_lab_image(x, NUM_BINS, 255)
-        image_shape = x.shape
+        sum = np.sum(quantum, axis=(0, 1))
 
-        for i in range(image_shape[0]):
-            for j in range(image_shape[1]):
-                try:
-                    pixel_distribution = quantum[i, j]
-                    with lock:
-                        final_sum = final_sum + pixel_distribution
-                        pixels_count += 1.0
+        with lock:
+            final_sum += sum
+            pixels_count += quantum.shape[0] * quantum.shape[1]
+            image_count += 1
 
-                        if pixels_count % PRINT_EVERY_N_PIXELS == 0:
-                            weights = final_sum / pixels_count
-                            np.save('weights', weights)
+            if image_count % PRINT_EVERY_N_IMAGES == 0:
+                weights = final_sum / pixels_count
+                np.save('weights.npy', weights)
 
-                except IndexError:
-                    pass
-
-    except IOError:
-        pass
-    except IndexError:
-        pass
+    except Exception as e:
+        print(e)
+        traceback.print_exc()
 
 
+print('How many images: {}'.format(len(filenames)))
 pool.map(partial(check_image, directory=directory), filenames)
 pool.join()
 

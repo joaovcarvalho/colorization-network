@@ -8,7 +8,7 @@ def quantize_lab_image(lab_image, bins, max_value):
 
     ab_channels = lab_image[:, :, 1:]
 
-    division_factor = math.floor(float(max_value) / float(bins))
+    division_factor = math.ceil(float(max_value) / float(bins))
     ab_channels = (np.floor_divide(ab_channels, division_factor))
 
     indexes = ab_channels[:, :, 0] * bins + ab_channels[:, :, 1]
@@ -25,11 +25,28 @@ def quantize_lab_image(lab_image, bins, max_value):
     return final_result
 
 
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
+
+
 def convert_quantization_to_image(quantization, bins, max_value):
     # type: (np.ndarray, int) -> np.ndarray
     image_shape = (quantization.shape[0], quantization.shape[1])
 
-    indexes = np.argmax(quantization, axis=2)
+    # print(np.sort(np.unique(quantization)))
+    # indexes = np.argmax(quantization, axis=2)
+    indexes = np.zeros((quantization.shape[0], quantization.shape[1]))
+    for i in range(quantization.shape[0]):
+        for j in range(quantization.shape[1]):
+            pixel_distribution = quantization[i, j]
+            nonzero_indexes = np.nonzero(pixel_distribution)
+            print(nonzero_indexes)
+            mean = np.mean(nonzero_indexes)
+            print(mean)
+            indexes[i, j] = mean
+
     division_factor = math.floor(float(max_value) / float(bins))
     a_channel = np.floor_divide(indexes, bins)
     b_channel = np.remainder(indexes, bins)

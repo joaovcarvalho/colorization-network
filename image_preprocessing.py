@@ -7,6 +7,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import traceback
+
 import cv2
 
 import numpy as np
@@ -855,15 +857,17 @@ class ColorizationDirectoryIterator(Iterator):
                                 ", ".join(_PIL_INTERPOLATION_METHODS.keys())))
                     resample = _PIL_INTERPOLATION_METHODS[self.interpolation]
                     img = img.resize(width_height_tuple, resample)
-            x = img_to_array(img, data_format=self.data_format)
 
-            x = cv2.cvtColor(x, cv2.COLOR_BGR2LAB)\
+            x = img_to_array(img, data_format=self.data_format)
+            x = x.astype('uint8')
+            x = cv2.cvtColor(x, cv2.COLOR_RGB2LAB)\
                 .reshape(self.target_size + (3,))
+            x = x.astype(K.floatx())
 
             quantum = quantize_lab_image(x, BINS_SIZE, 255)
             original_x[i] = quantum
 
-            x = self.image_data_generator.random_transform(x)
+            # x = self.image_data_generator.random_transform(x)
             x = self.image_data_generator.standardize(x)
 
             batch_size = self.target_size + (CHANNELS_SIZE,)
@@ -909,5 +913,7 @@ class ColorizationDirectoryIterator(Iterator):
             # so it can be done in parallel
             try:
                 return self._get_batches_of_transformed_samples(index_array)
-            except Exception:
+            except Exception as e:
+                print(e)
+                traceback.print_exc()
                 pass
