@@ -1,6 +1,9 @@
 import cv2
+import keras
 import numpy as np
 from PIL import ImageFile
+from keras.optimizers import Adam
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 from keras.callbacks import TensorBoard
@@ -18,13 +21,13 @@ from image_preprocessing import ColorizationDirectoryIterator
 from model import ColorfyModelFactory
 from weights_saver_callback import WeightsSaverCallback
 
-TARGET_SIZE = (64, 64)
+TARGET_SIZE = (128, 128)
 
 NUM_EPOCHS = 5
-BATCH_SIZE = 32
-STEPS_PER_EPOCH = 10000
+BATCH_SIZE = 4
+STEPS_PER_EPOCH = 50000
 VALIDATION_STEPS = 10000
-SAVE_MODEL_EVERY_N_BATCHES = 10
+SAVE_MODEL_EVERY_N_BATCHES = 500
 
 model = ColorfyModelFactory(TARGET_SIZE + (1,)).get_model()
 model.summary()
@@ -36,17 +39,16 @@ weights_v = K.constant(weights)
 
 def colorize_loss(y_true, y_pred):
     global weights_v
-    # mse = K.square(y_true - y_pred)
-    # sum = K.sum(mse, axis=(1, 2))
-    mult = y_pred * y_true
-    sum = K.sum(mult, axis=(1, 2))
+    mult = y_true - y_pred
+    square = K.square(mult)
+    sum = K.sum(square, axis=(1, 2))
     weighted_sum = sum * weights_v
-    final_loss = K.sum(weighted_sum)
-    return final_loss
+    return K.sum(weighted_sum)
 
 
-# For a mean squared error regression problem
-model.compile(optimizer='adam', loss="mse")
+optimizer = Adam(lr=0.0001)
+
+model.compile(optimizer=optimizer, loss=colorize_loss)
 
 train_datagen = ImageDataGenerator(
         rescale=1./255,
@@ -75,7 +77,9 @@ validation_generator = ColorizationDirectoryIterator(
         class_mode='original',
 )
 
-callbacks = [WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES)]
+tbCallBack = TensorBoard(log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True)
+
+callbacks = [WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES), tbCallBack]
 
 model.fit_generator(
         train_generator,

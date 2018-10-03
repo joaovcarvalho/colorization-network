@@ -8,8 +8,8 @@ from image_preprocessing import ColorizationDirectoryIterator
 from model import ColorfyModelFactory
 from quantization import convert_quantization_to_image
 
-img_rows = 64
-img_cols = 64
+img_rows = 128
+img_cols = 128
 
 input_shape = (img_rows, img_cols)
 
@@ -28,7 +28,7 @@ train_generator = ColorizationDirectoryIterator(
         class_mode='original'
 )
 
-OUTPUT_SIZE = (200, 200)
+OUTPUT_SIZE = (400, 400)
 final_test_image = None
 
 count = 0
@@ -53,7 +53,8 @@ for x, y in train_generator:
     x *= 255
     x = x.astype('uint8')
 
-    colorized = np.concatenate((x, a, b), axis=2).astype('uint8')
+    constant_light = np.ones(a.shape) * 255
+    colorized = np.concatenate((constant_light, a, b), axis=2).astype('uint8')
     colorized = cv2.resize(colorized, OUTPUT_SIZE)
     colorized = cv2.cvtColor(colorized, cv2.COLOR_LAB2BGR)
 
@@ -75,7 +76,7 @@ for x, y in train_generator:
     result = np.append(result, original, axis=1)
 
     cv2.imshow('result', result)
-    cv2.waitKey(1)
+    cv2.waitKey(0)
     #
     # if final_test_image is not None:
     #     final_test_image = np.append(final_test_image, result, axis=0)

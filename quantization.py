@@ -36,16 +36,15 @@ def convert_quantization_to_image(quantization, bins, max_value):
     image_shape = (quantization.shape[0], quantization.shape[1])
 
     # print(np.sort(np.unique(quantization)))
-    # indexes = np.argmax(quantization, axis=2)
-    indexes = np.zeros((quantization.shape[0], quantization.shape[1]))
-    for i in range(quantization.shape[0]):
-        for j in range(quantization.shape[1]):
-            pixel_distribution = quantization[i, j]
-            nonzero_indexes = np.nonzero(pixel_distribution)
-            print(nonzero_indexes)
-            mean = np.mean(nonzero_indexes)
-            print(mean)
-            indexes[i, j] = mean
+    print(quantization)
+    indexes = np.argmax(quantization, axis=2)
+    # indexes = np.zeros((quantization.shape[0], quantization.shape[1]))
+    # for i in range(quantization.shape[0]):
+    #     for j in range(quantization.shape[1]):
+    #         pixel_distribution = quantization[i, j]
+    #         nonzero_indexes = np.nonzero(pixel_distribution)
+    #         mean = np.mean(nonzero_indexes)
+    #         indexes[i, j] = mean
 
     division_factor = math.floor(float(max_value) / float(bins))
     a_channel = np.floor_divide(indexes, bins)
