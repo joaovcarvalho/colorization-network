@@ -15,7 +15,7 @@ directory = 'data/'
 files = [f for (_, _, fs) in os.walk(directory) for f in fs if f.endswith(".jpg")]
 
 # input image dimensions
-img_rows, img_cols = 32, 32
+img_rows, img_cols = 128, 128
 input_shape = (img_rows, img_cols)
 
 # loader = ColorfyImageLoader(directory)

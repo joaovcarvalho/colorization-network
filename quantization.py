@@ -36,8 +36,9 @@ def convert_quantization_to_image(quantization, bins, max_value):
     image_shape = (quantization.shape[0], quantization.shape[1])
 
     # print(np.sort(np.unique(quantization)))
-    print(quantization)
-    indexes = np.argmax(quantization, axis=2)
+    sorted_index = np.argsort(-quantization, axis=2)
+    indexes = sorted_index[:, :, 0]
+    # indexes = np.argmax(quantization, axis=2)
     # indexes = np.zeros((quantization.shape[0], quantization.shape[1]))
     # for i in range(quantization.shape[0]):
     #     for j in range(quantization.shape[1]):

@@ -54,7 +54,7 @@ for x, y in train_generator:
     x = x.astype('uint8')
 
     constant_light = np.ones(a.shape) * 255
-    colorized = np.concatenate((constant_light, a, b), axis=2).astype('uint8')
+    colorized = np.concatenate((x, a, b), axis=2).astype('uint8')
     colorized = cv2.resize(colorized, OUTPUT_SIZE)
     colorized = cv2.cvtColor(colorized, cv2.COLOR_LAB2BGR)
 

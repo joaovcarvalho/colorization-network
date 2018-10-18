@@ -9,7 +9,8 @@ from PIL import Image
 from image_preprocessing import _count_valid_files_in_directory, _list_valid_filenames_in_directory
 from quantization import quantize_lab_image
 
-directory = 'imagenet'
+# directory = 'imagenet'
+directory = 'places/data/vision/torralba/deeplearning/tmp'
 
 classes = []
 
