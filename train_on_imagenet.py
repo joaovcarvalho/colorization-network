@@ -2,7 +2,7 @@ import cv2
 import keras
 import numpy as np
 from PIL import ImageFile
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -23,9 +23,9 @@ from weights_saver_callback import WeightsSaverCallback
 
 TARGET_SIZE = (128, 128)
 
-NUM_EPOCHS = 10
+NUM_EPOCHS = 2
 BATCH_SIZE = 10
-STEPS_PER_EPOCH = 150000
+STEPS_PER_EPOCH = 200000
 VALIDATION_STEPS = 1000
 SAVE_MODEL_EVERY_N_BATCHES = 500
 
@@ -46,7 +46,12 @@ def colorize_loss(y_true, y_pred):
     return K.sum(sum)
 
 
-optimizer = Adam(lr=0.0001)
+def cross_entropy_loss(y_true, y_pred):
+    mult = y_true * K.log(y_pred)
+    return -1 * K.mean(mult)
+
+
+optimizer = RMSprop(lr=0.0001)
 
 model.compile(optimizer=optimizer, loss=colorize_loss)
 
@@ -55,6 +60,7 @@ train_datagen = ImageDataGenerator(
 )
 
 data_folder = 'places/data/vision/torralba/deeplearning/images256'
+# data_folder = 'imagenet'
 
 data_generator = ColorizationDirectoryIterator(
         data_folder,

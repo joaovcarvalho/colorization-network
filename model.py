@@ -65,6 +65,7 @@ class ColorfyModelFactory(object):
 
         # Output layer
         x = Conv2D(OUTPUT_CHANNELS, (1, 1),
+                   activation=CNN_ACTIVATION,
                    padding="same",
                    kernel_initializer=KERNEL_INITIALIZER)(x)
 
