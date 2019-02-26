@@ -1,15 +1,13 @@
-from keras.datasets import cifar10
-from keras.preprocessing.image import ImageDataGenerator
-
-from image_path_sequence import ImagesPathSequence
-# from loader import ColorfyImageLoader
-from weights_saver_callback import WeightsSaverCallback
-from keras.callbacks import TensorBoard
-from model import ColorfyModelFactory
-from preprocessing import ColorfyPreprocessing
 import os
+
 import cv2
 import numpy as np
+from keras.callbacks import TensorBoard
+from keras.datasets import cifar10
+
+from model import ColorfyModelFactory
+# from loader import ColorfyImageLoader
+from weights_saver_callback import WeightsSaverCallback
 
 directory = 'data/'
 files = [f for (_, _, fs) in os.walk(directory) for f in fs if f.endswith(".jpg")]
@@ -65,3 +63,4 @@ history = model.fit(gray_images, color_images,
                     epochs=NUM_EPOCHS,
                     callbacks=callbacks,
                     batch_size=BATCH_SIZE)
+

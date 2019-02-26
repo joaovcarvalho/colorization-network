@@ -1,73 +1,58 @@
-import cv2
-import keras
-import numpy as np
+import sys
+
+import tensorflow as tf
 from PIL import ImageFile
-from keras.optimizers import Adam, RMSprop
+from keras.backend.tensorflow_backend import set_session
+from keras.callbacks import TensorBoard, ReduceLROnPlateau
+from keras.optimizers import Adam
+from keras.preprocessing.image import ImageDataGenerator
+
+from image_preprocessing import ColorizationDirectoryIterator
+from losses import colorful_colorization_loss
+from model import ColorfyModelFactory
+from weights_saver_callback import WeightsSaverCallback
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-from keras.callbacks import TensorBoard, ReduceLROnPlateau
-import keras.backend as K
-import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
 
 config = tf.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.3
 set_session(tf.Session(config=config))
 
-from keras.preprocessing.image import ImageDataGenerator
-
-from image_preprocessing import ColorizationDirectoryIterator
-from model import ColorfyModelFactory
-from weights_saver_callback import WeightsSaverCallback
-
-TARGET_SIZE = (128, 128)
+TARGET_SIZE = (64, 64)
 
 NUM_EPOCHS = 2
-BATCH_SIZE = 10
-STEPS_PER_EPOCH = 200000
+HOW_MANY_IMAGES = 2e6
+# HOW_MANY_IMAGES = 450000
+BATCH_SIZE = 15
+STEPS_PER_EPOCH = HOW_MANY_IMAGES / BATCH_SIZE
 VALIDATION_STEPS = 1000
 SAVE_MODEL_EVERY_N_BATCHES = 500
 
 model = ColorfyModelFactory(TARGET_SIZE + (1,)).get_model()
+
+if len(sys.argv) > 1:
+    model.load_weights(sys.argv[1])
+
 model.summary()
 
-# weights = np.load('weights.npy')
-# weights = 1 - weights
-# weights_v = K.constant(weights)
+# Parameters extracted from Colorful Image Colorization paper
+initial_learning_rate = 3 / 10e5
+optimizer = Adam(lr=initial_learning_rate, beta_1=0.9, beta_2=0.99, decay=1/10e3)
 
-
-def colorize_loss(y_true, y_pred):
-    global weights_v
-    mult = y_true - y_pred
-    square = K.square(mult)
-    sum = K.sum(square, axis=(1, 2))
-    # weighted_sum = sum * weights_v
-    return K.sum(sum)
-
-
-def cross_entropy_loss(y_true, y_pred):
-    mult = y_true * K.log(y_pred)
-    return -1 * K.mean(mult)
-
-
-optimizer = RMSprop(lr=0.0001)
-
-model.compile(optimizer=optimizer, loss=colorize_loss)
+model.compile(optimizer=optimizer, loss=colorful_colorization_loss)
 
 train_datagen = ImageDataGenerator(
-        rescale=1./255,
+    rescale=1. / 255,
 )
 
 data_folder = 'places/data/vision/torralba/deeplearning/images256'
-# data_folder = 'imagenet'
 
 data_generator = ColorizationDirectoryIterator(
-        data_folder,
-        train_datagen,
-        target_size=TARGET_SIZE,
-        batch_size=BATCH_SIZE,
-        class_mode='original',
+    data_folder,
+    train_datagen,
+    target_size=TARGET_SIZE,
+    batch_size=BATCH_SIZE,
+    class_mode='original',
 )
 
 tensor_board_callback = TensorBoard(
@@ -80,10 +65,10 @@ reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
 callbacks = [WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES), tensor_board_callback, reduce_lr]
 
 model.fit_generator(
-        data_generator,
-        steps_per_epoch=STEPS_PER_EPOCH,
-        epochs=NUM_EPOCHS,
-        validation_data=data_generator,
-        validation_steps=VALIDATION_STEPS,
-        callbacks=callbacks,
+    data_generator,
+    steps_per_epoch=STEPS_PER_EPOCH,
+    epochs=NUM_EPOCHS,
+    validation_data=data_generator,
+    validation_steps=VALIDATION_STEPS,
+    callbacks=callbacks,
 )

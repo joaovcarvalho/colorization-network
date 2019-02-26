@@ -839,6 +839,7 @@ class ColorizationDirectoryIterator(Iterator):
         original_x = np.zeros((len(index_array),) + self.target_size + (BINS_SIZE**2,), dtype=K.floatx())
         # build batch of image data
         for i, j in enumerate(index_array):
+            can_crop = False
             fname = self.filenames[j]
             img = load_img(os.path.join(self.directory, fname),
                            grayscale=False,
@@ -848,7 +849,9 @@ class ColorizationDirectoryIterator(Iterator):
                 img = self.image_data_generator.preprocessing_function(img)
             if self.target_size is not None:
                 width_height_tuple = (self.target_size[1], self.target_size[0])
-                if img.size != width_height_tuple:
+                if img.size[0] < width_height_tuple[0] and img.size[1] < width_height_tuple[1]:
+                    can_crop = True
+                elif img.size != width_height_tuple:
                     if self.interpolation not in _PIL_INTERPOLATION_METHODS:
                         raise ValueError(
                             'Invalid interpolation method {} specified. Supported '
@@ -860,6 +863,12 @@ class ColorizationDirectoryIterator(Iterator):
 
             x = img_to_array(img, data_format=self.data_format)
             x = x.astype('uint8')
+
+            # Instead of resizing that can be very expensive we crop the image
+            # if the width and height are suitable
+            if can_crop:
+                x = x[:self.target_size[0], :self.target_size[1]]
+
             x = cv2.cvtColor(x, cv2.COLOR_RGB2LAB)\
                 .reshape(self.target_size + (3,))
             x = x.astype(K.floatx())
@@ -868,12 +877,14 @@ class ColorizationDirectoryIterator(Iterator):
             original_x[i] = quantum
 
             # x = self.image_data_generator.random_transform(x)
-            x = self.image_data_generator.standardize(x)
+            # x = self.image_data_generator.standardize(x)
 
             batch_size = self.target_size + (CHANNELS_SIZE,)
 
             # Get only L channel from lab image
-            batch_x[i] = x[:, :, 0].reshape(batch_size)
+            # Center the data around 0.0
+            l_channel = x[:, :, 0] - 50.0
+            batch_x[i] = l_channel.reshape(batch_size)
         # optionally save augmented images to disk for debugging purposes
         if self.save_to_dir:
             for i, j in enumerate(index_array):

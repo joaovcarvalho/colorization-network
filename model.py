@@ -34,34 +34,50 @@ class ColorfyModelFactory(object):
     def get_model(self):
         net_input = Input(shape=self.input_shape, name='net_input')
 
-        # Input Layer
+        # Conv 1
         x = Conv2D(64,
                    kernel_size=(3, 3),
                    activation=CNN_ACTIVATION,
                    padding="same",
                    kernel_initializer=KERNEL_INITIALIZER)(net_input)
 
-        x = add_conv_layer(64, x)
         x = add_conv_layer(64, x, add_batch=True, strides=2)
+
+        # Conv 2
         x = add_conv_layer(128, x)
         x = add_conv_layer(128, x, add_batch=True, strides=2)
+
+        # Conv 3
         x = add_conv_layer(256, x)
         x = add_conv_layer(256, x)
         x = add_conv_layer(256, x, add_batch=True, strides=2)
+
+        # Conv 4
         x = add_conv_layer(512, x)
         x = add_conv_layer(512, x)
         x = add_conv_layer(512, x, add_batch=True)
+
+        # Conv 5
         x = add_conv_layer(512, x)
         x = add_conv_layer(512, x)
         x = add_conv_layer(512, x, add_batch=True)
+
+        # Conv 6
+        x = add_conv_layer(512, x)
+        x = add_conv_layer(512, x)
+        x = add_conv_layer(512, x, add_batch=True)
+
+        # Conv 7
         x = UpSampling2D()(x)
         x = add_conv_layer(256, x)
+        x = add_conv_layer(256, x)
         x = add_conv_layer(256, x, add_batch=True)
+
+        # Conv 8
         x = UpSampling2D()(x)
         x = add_conv_layer(128, x)
+        x = add_conv_layer(128, x)
         x = UpSampling2D()(x)
-        x = add_conv_layer(64, x)
-        x = add_conv_layer(64, x)
 
         # Output layer
         x = Conv2D(OUTPUT_CHANNELS, (1, 1),

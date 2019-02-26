@@ -8,8 +8,8 @@ from image_preprocessing import ColorizationDirectoryIterator
 from model import ColorfyModelFactory
 from quantization import convert_quantization_to_image
 
-img_rows = 128
-img_cols = 128
+img_rows = 64
+img_cols = 64
 
 input_shape = (img_rows, img_cols)
 
@@ -50,7 +50,7 @@ for x, y in train_generator:
     a = a.reshape((img_rows, img_cols, 1))
     b = b.reshape((img_rows, img_cols, 1))
 
-    x *= 255
+    x += 50
     x = x.astype('uint8')
 
     constant_light = np.ones(a.shape) * 255
