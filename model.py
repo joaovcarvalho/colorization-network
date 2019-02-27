@@ -17,7 +17,8 @@ def add_conv_layer(depth, x, add_batch=False, strides=1, dilation_rate=1, kernel
         strides=strides,
         dilation_rate=dilation_rate,
         kernel_initializer=KERNEL_INITIALIZER,
-        kernel_regularizer=l2(0.6)
+        # Change l2 regularization to 0.001 to be equal to ColorfulColorization model
+        kernel_regularizer=l2(0.001)
     )(x)
 
     # x = Dropout(0.5)(x)
@@ -58,14 +59,14 @@ class ColorfyModelFactory(object):
         x = add_conv_layer(512, x, add_batch=True)
 
         # Conv 5
-        x = add_conv_layer(512, x)
-        x = add_conv_layer(512, x)
-        x = add_conv_layer(512, x, add_batch=True)
+        x = add_conv_layer(512, x, dilation_rate=2)
+        x = add_conv_layer(512, x, dilation_rate=2)
+        x = add_conv_layer(512, x, add_batch=True, dilation_rate=2)
 
         # Conv 6
-        x = add_conv_layer(512, x)
-        x = add_conv_layer(512, x)
-        x = add_conv_layer(512, x, add_batch=True)
+        x = add_conv_layer(512, x, dilation_rate=2)
+        x = add_conv_layer(512, x, dilation_rate=2)
+        x = add_conv_layer(512, x, add_batch=True, dilation_rate=2)
 
         # Conv 7
         x = UpSampling2D()(x)
