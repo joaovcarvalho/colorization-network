@@ -7,6 +7,9 @@ from keras.preprocessing.image import ImageDataGenerator
 from image_preprocessing import ColorizationDirectoryIterator
 from model import ColorfyModelFactory
 from quantization import convert_quantization_to_image
+from matplotlib import pyplot as plt
+
+from visualizations import get_activation_model
 
 img_rows = 64
 img_cols = 64
@@ -17,15 +20,15 @@ model = ColorfyModelFactory(input_shape + (1,)).get_model()
 model.load_weights(sys.argv[1])
 
 train_datagen = ImageDataGenerator(
-        rescale=1./255,
+    rescale=1. / 255,
 )
 
 train_generator = ColorizationDirectoryIterator(
-        'imagenet',
-        train_datagen,
-        target_size=input_shape,
-        batch_size=1,
-        class_mode='original'
+    'imagenet',
+    train_datagen,
+    target_size=input_shape,
+    batch_size=1,
+    class_mode='original'
 )
 
 OUTPUT_SIZE = (400, 400)
@@ -33,12 +36,18 @@ final_test_image = None
 
 count = 0
 
+activation_model = get_activation_model(model)
+
+FINAL_IMAGE_FORMAT = cv2.COLOR_LAB2RGB
+HOW_MANY_TO_PLOT = 20
+
 for x, y in train_generator:
-    if count >= 1000:
+    if count >= HOW_MANY_TO_PLOT:
         break
     count += 1
 
     result = model.predict(x)
+    activations = activation_model.predict(x)
 
     x = x.reshape(img_rows, img_cols, 1)
 
@@ -56,7 +65,7 @@ for x, y in train_generator:
     constant_light = np.ones(a.shape) * 255
     colorized = np.concatenate((x, a, b), axis=2).astype('uint8')
     colorized = cv2.resize(colorized, OUTPUT_SIZE)
-    colorized = cv2.cvtColor(colorized, cv2.COLOR_LAB2BGR)
+    colorized = cv2.cvtColor(colorized, FINAL_IMAGE_FORMAT)
 
     original = convert_quantization_to_image(y[0], 16, 255)
 
@@ -65,7 +74,7 @@ for x, y in train_generator:
 
     original = np.concatenate((x, a_original, b_original), axis=2).astype('uint8')
     original = cv2.resize(original, OUTPUT_SIZE)
-    original = cv2.cvtColor(original, cv2.COLOR_LAB2BGR)
+    original = cv2.cvtColor(original, FINAL_IMAGE_FORMAT)
 
     original = cv2.resize(original, OUTPUT_SIZE).astype('uint8')
 
@@ -75,18 +84,6 @@ for x, y in train_generator:
     result = np.append(x, colorized, axis=1)
     result = np.append(result, original, axis=1)
 
-    cv2.imshow('result', result)
-    cv2.waitKey(0)
-    #
-    # if final_test_image is not None:
-    #     final_test_image = np.append(final_test_image, result, axis=0)
-    # else:
-    #     final_test_image = result
-
-# import time
-#
-# timestr = time.strftime("%Y%m%d_%H%M%S")
-#
-# cv2.imshow('test', final_test_image)
-# cv2.waitKey(0)
-# cv2.imwrite('results/results_{}.png'.format(timestr), final_test_image)
+    plt.imshow(result)
+    plt.show()
+    # plot_activations(activations, model)
