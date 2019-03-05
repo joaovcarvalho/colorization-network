@@ -2,17 +2,19 @@ import sys
 
 import cv2
 import numpy as np
+from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 
 from image_preprocessing import ColorizationDirectoryIterator
+from losses import colorize_loss
 from model import ColorfyModelFactory
 from quantization import convert_quantization_to_image
 from matplotlib import pyplot as plt
 
 from visualizations import get_activation_model
 
-img_rows = 64
-img_cols = 64
+img_rows = 128
+img_cols = 128
 
 input_shape = (img_rows, img_cols)
 
@@ -30,6 +32,13 @@ train_generator = ColorizationDirectoryIterator(
     batch_size=1,
     class_mode='original'
 )
+
+# model.compile(Adam(),loss=colorize_loss, metrics=['accuracy'])
+# loss, accuracy = model.evaluate_generator(train_generator,
+#                                           workers=3,
+#                                           use_multiprocessing=True)
+#
+# print('Accuracy {}'.format(accuracy * 100))
 
 OUTPUT_SIZE = (400, 400)
 final_test_image = None

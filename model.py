@@ -64,6 +64,7 @@ class ColorfyModelFactory(object):
         x = add_conv_layer(512, x, add_batch=True, dilation_rate=2)
 
         # Conv 6
+        x = UpSampling2D()(x)
         x = add_conv_layer(512, x, dilation_rate=2)
         x = add_conv_layer(512, x, dilation_rate=2)
         x = add_conv_layer(512, x, add_batch=True, dilation_rate=2)
@@ -78,7 +79,6 @@ class ColorfyModelFactory(object):
         x = UpSampling2D()(x)
         x = add_conv_layer(128, x)
         x = add_conv_layer(128, x)
-        x = UpSampling2D()(x)
 
         # Output layer
         x = Conv2D(OUTPUT_CHANNELS, (1, 1),
