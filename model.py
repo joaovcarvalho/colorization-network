@@ -18,7 +18,7 @@ def add_conv_layer(depth, x, add_batch=False, strides=1, dilation_rate=1, kernel
         dilation_rate=dilation_rate,
         kernel_initializer=KERNEL_INITIALIZER,
         # Change l2 regularization to 0.001 to be equal to ColorfulColorization model
-        kernel_regularizer=l2(0.001)
+        kernel_regularizer=l2(0.6)
     )(x)
 
     # x = Dropout(0.5)(x)
