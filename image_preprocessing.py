@@ -849,9 +849,9 @@ class ColorizationDirectoryIterator(Iterator):
                 img = self.image_data_generator.preprocessing_function(img)
             if self.target_size is not None:
                 width_height_tuple = (self.target_size[1], self.target_size[0])
-                if img.size[0] < width_height_tuple[0] and img.size[1] < width_height_tuple[1]:
-                    can_crop = True
-                elif img.size != width_height_tuple:
+                # if img.size[0] < width_height_tuple[1] and img.size[1] < width_height_tuple[0]:
+                #     can_crop = True
+                if img.size != width_height_tuple:
                     if self.interpolation not in _PIL_INTERPOLATION_METHODS:
                         raise ValueError(
                             'Invalid interpolation method {} specified. Supported '
@@ -866,8 +866,8 @@ class ColorizationDirectoryIterator(Iterator):
 
             # Instead of resizing that can be very expensive we crop the image
             # if the width and height are suitable
-            if can_crop:
-                x = x[:self.target_size[0], :self.target_size[1]]
+            # if can_crop:
+            #     x = x[:self.target_size[0], :self.target_size[1]]
 
             x = cv2.cvtColor(x, cv2.COLOR_RGB2LAB)\
                 .reshape(self.target_size + (3,))
