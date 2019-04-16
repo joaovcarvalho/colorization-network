@@ -86,7 +86,7 @@ class ColorfyModelFactory(object):
                    padding="same",
                    kernel_initializer=KERNEL_INITIALIZER)(x)
 
-        x = Softmax(axis=2)(x)
+        x = Softmax(axis=(0,1))(x)
 
         model = Model(inputs=net_input, outputs=x)
 
