@@ -1,5 +1,6 @@
 from keras import Model, Input
-from keras.layers import Conv2D, Dropout, UpSampling2D, AveragePooling2D, BatchNormalization, Activation, Softmax
+from keras.layers import Conv2D, Dropout, UpSampling2D, AveragePooling2D, BatchNormalization, Activation, Softmax, \
+    Concatenate
 from keras.regularizers import l2
 
 DROPOUT_RATE = 0.5
@@ -18,10 +19,8 @@ def add_conv_layer(depth, x, add_batch=False, strides=1, dilation_rate=1, kernel
         dilation_rate=dilation_rate,
         kernel_initializer=KERNEL_INITIALIZER,
         # Change l2 regularization to 0.001 to be equal to ColorfulColorization model
-        kernel_regularizer=l2(0.6)
+        kernel_regularizer=l2(0.001)
     )(x)
-
-    # x = Dropout(0.5)(x)
 
     if add_batch:
         x = BatchNormalization()(x)
@@ -36,22 +35,22 @@ class ColorfyModelFactory(object):
         net_input = Input(shape=self.input_shape, name='net_input')
 
         # Conv 1
-        x = Conv2D(64,
+        before_first_downsample = Conv2D(64,
                    kernel_size=(3, 3),
                    activation=CNN_ACTIVATION,
                    padding="same",
                    kernel_initializer=KERNEL_INITIALIZER)(net_input)
 
-        x = add_conv_layer(64, x, add_batch=True, strides=2)
+        x = add_conv_layer(64, before_first_downsample, add_batch=True, strides=2)
 
         # Conv 2
-        x = add_conv_layer(128, x)
-        x = add_conv_layer(128, x, add_batch=True, strides=2)
+        before_second_downsample = add_conv_layer(128, x)
+        x = add_conv_layer(128, before_second_downsample, add_batch=True, strides=2)
 
         # Conv 3
         x = add_conv_layer(256, x)
-        x = add_conv_layer(256, x)
-        x = add_conv_layer(256, x, add_batch=True, strides=2)
+        before_third_downsample = add_conv_layer(256, x)
+        x = add_conv_layer(256, before_third_downsample, add_batch=True, strides=2)
 
         # Conv 4
         x = add_conv_layer(512, x)
@@ -65,28 +64,30 @@ class ColorfyModelFactory(object):
 
         # Conv 6
         x = UpSampling2D()(x)
+        x = Concatenate()([x, before_third_downsample])
         x = add_conv_layer(512, x, dilation_rate=2)
         x = add_conv_layer(512, x, dilation_rate=2)
         x = add_conv_layer(512, x, add_batch=True, dilation_rate=2)
 
         # Conv 7
         x = UpSampling2D()(x)
+        x = Concatenate()([x, before_second_downsample])
         x = add_conv_layer(256, x)
         x = add_conv_layer(256, x)
         x = add_conv_layer(256, x, add_batch=True)
 
         # Conv 8
         x = UpSampling2D()(x)
+        x = Concatenate()([x, before_first_downsample])
         x = add_conv_layer(128, x)
         x = add_conv_layer(128, x)
 
         # Output layer
         x = Conv2D(OUTPUT_CHANNELS, (1, 1),
-                   activation=CNN_ACTIVATION,
                    padding="same",
                    kernel_initializer=KERNEL_INITIALIZER)(x)
 
-        x = Softmax(axis=(0,1))(x)
+        x = Softmax(axis=(1, 2))(x)
 
         model = Model(inputs=net_input, outputs=x)
 

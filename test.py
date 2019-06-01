@@ -2,15 +2,11 @@ import sys
 
 import cv2
 import numpy as np
-from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 
 from image_preprocessing import ColorizationDirectoryIterator
-from losses import colorize_loss
 from model import ColorfyModelFactory
 from quantization import convert_quantization_to_image
-from matplotlib import pyplot as plt
-
 from visualizations import get_activation_model
 
 img_rows = 128
@@ -47,7 +43,7 @@ count = 0
 
 activation_model = get_activation_model(model)
 
-FINAL_IMAGE_FORMAT = cv2.COLOR_LAB2RGB
+FINAL_IMAGE_FORMAT = cv2.COLOR_LAB2BGR
 HOW_MANY_TO_PLOT = 20
 
 for x, y in train_generator:
@@ -93,6 +89,6 @@ for x, y in train_generator:
     result = np.append(x, colorized, axis=1)
     result = np.append(result, original, axis=1)
 
-    plt.imshow(result)
-    plt.show()
+    cv2.imshow('result', result)
+    cv2.waitKey(500)
     # plot_activations(activations, model)

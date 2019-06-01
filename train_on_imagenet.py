@@ -22,7 +22,7 @@ TARGET_SIZE = (64, 64)
 
 HOW_MANY_IMAGES_PER_EPOCH = 2.3e6
 NUM_EPOCHS = 4
-BATCH_SIZE = 30
+BATCH_SIZE = 20
 STEPS_PER_EPOCH = HOW_MANY_IMAGES_PER_EPOCH / BATCH_SIZE
 SAVE_MODEL_EVERY_N_BATCHES = 500
 
@@ -34,7 +34,7 @@ if len(sys.argv) > 1:
 model.summary()
 
 # Parameters extracted from Colorful Image Colorization paper
-initial_learning_rate = 3 / 10e5
+initial_learning_rate = 3 / 10e3
 optimizer = Adam(lr=initial_learning_rate, beta_1=0.9, beta_2=0.99, decay=1/10e3)
 
 model.compile(optimizer=optimizer, loss=colorful_colorization_loss)
@@ -69,9 +69,9 @@ tensor_board_callback = TensorBoard(
 )
 
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
-                              patience=1, min_lr=0.000001)
+                              patience=1)
 
-callbacks = [WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES), tensor_board_callback, reduce_lr]
+callbacks = [WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES), tensor_board_callback]
 
 model.fit_generator(
     data_generator,
