@@ -873,6 +873,9 @@ class ColorizationDirectoryIterator(Iterator):
                 .reshape(self.target_size + (3,))
             x = x.astype(K.floatx())
 
+            if np.any(np.isnan(x)):
+                x = np.ones(x.shape) * 50
+
             quantum = quantize_lab_image(x, BINS_SIZE, 255)
             original_x[i] = quantum
 
@@ -884,6 +887,9 @@ class ColorizationDirectoryIterator(Iterator):
             # Get only L channel from lab image
             # Center the data around 0.0
             l_channel = x[:, :, 0] - 50.0
+            if np.any(np.isnan(l_channel)):
+                l_channel = np.zeros(batch_size)
+
             batch_x[i] = l_channel.reshape(batch_size)
         # optionally save augmented images to disk for debugging purposes
         if self.save_to_dir:

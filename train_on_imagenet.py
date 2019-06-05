@@ -15,14 +15,14 @@ from weights_saver_callback import WeightsSaverCallback
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 config = tf.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.5
+config.gpu_options.per_process_gpu_memory_fraction = 0.3
 set_session(tf.Session(config=config))
 
-TARGET_SIZE = (64, 64)
+TARGET_SIZE = (32, 32)
 
 HOW_MANY_IMAGES_PER_EPOCH = 2.3e6
 NUM_EPOCHS = 4
-BATCH_SIZE = 20
+BATCH_SIZE = 40
 STEPS_PER_EPOCH = HOW_MANY_IMAGES_PER_EPOCH / BATCH_SIZE
 SAVE_MODEL_EVERY_N_BATCHES = 500
 
@@ -35,7 +35,7 @@ model.summary()
 
 # Parameters extracted from Colorful Image Colorization paper
 initial_learning_rate = 3 / 10e3
-optimizer = Adam(lr=initial_learning_rate, beta_1=0.9, beta_2=0.99, decay=1/10e3)
+optimizer = Adam(lr=initial_learning_rate, beta_1=0.9, beta_2=0.99, decay=1/10e6)
 
 model.compile(optimizer=optimizer, loss=colorful_colorization_loss)
 
@@ -43,7 +43,7 @@ train_datagen = ImageDataGenerator(
     rescale=1. / 255,
 )
 
-data_folder = 'places/data/vision/torralba/deeplearning/images256'
+data_folder = 'places/test/data/vision/torralba/deeplearning/images256'
 
 data_generator = ColorizationDirectoryIterator(
     data_folder,
