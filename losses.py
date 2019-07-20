@@ -9,4 +9,4 @@ def colorize_loss(y_true, y_pred):
 
 
 def colorful_colorization_loss(y_true, y_pred):
-    return -1 * K.sum(y_true * K.log(y_pred))
+    return -1 * K.sum(y_true * K.log(y_pred + 1e-10))

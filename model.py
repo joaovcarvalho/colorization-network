@@ -19,7 +19,7 @@ def add_conv_layer(depth, x, add_batch=False, strides=1, dilation_rate=1, kernel
         dilation_rate=dilation_rate,
         kernel_initializer=KERNEL_INITIALIZER,
         # Change l2 regularization to 0.001 to be equal to ColorfulColorization model
-        kernel_regularizer=l2(0.001)
+        kernel_regularizer=l2(0.03)
     )(x)
 
     if add_batch:
@@ -35,22 +35,20 @@ class ColorfyModelFactory(object):
         net_input = Input(shape=self.input_shape, name='net_input')
 
         # Conv 1
-        before_first_downsample = Conv2D(64,
+        x = Conv2D(64,
                    kernel_size=(3, 3),
                    activation=CNN_ACTIVATION,
                    padding="same",
                    kernel_initializer=KERNEL_INITIALIZER)(net_input)
 
-        x = add_conv_layer(64, before_first_downsample, add_batch=True, strides=2)
+        x = add_conv_layer(64, x, add_batch=True, strides=2)
 
         # Conv 2
-        before_second_downsample = add_conv_layer(128, x)
-        x = add_conv_layer(128, before_second_downsample, add_batch=True, strides=2)
+        x = add_conv_layer(128, x, add_batch=True, strides=2)
 
         # Conv 3
         x = add_conv_layer(256, x)
-        before_third_downsample = add_conv_layer(256, x)
-        x = add_conv_layer(256, before_third_downsample, add_batch=True, strides=2)
+        x = add_conv_layer(256, x, add_batch=True, strides=2)
 
         # Conv 4
         x = add_conv_layer(512, x)
@@ -64,21 +62,18 @@ class ColorfyModelFactory(object):
 
         # Conv 6
         x = UpSampling2D()(x)
-        x = Concatenate()([x, before_third_downsample])
         x = add_conv_layer(512, x, dilation_rate=2)
         x = add_conv_layer(512, x, dilation_rate=2)
         x = add_conv_layer(512, x, add_batch=True, dilation_rate=2)
 
         # Conv 7
         x = UpSampling2D()(x)
-        x = Concatenate()([x, before_second_downsample])
         x = add_conv_layer(256, x)
         x = add_conv_layer(256, x)
         x = add_conv_layer(256, x, add_batch=True)
 
         # Conv 8
         x = UpSampling2D()(x)
-        x = Concatenate()([x, before_first_downsample])
         x = add_conv_layer(128, x)
         x = add_conv_layer(128, x)
 

@@ -44,7 +44,7 @@ count = 0
 activation_model = get_activation_model(model)
 
 FINAL_IMAGE_FORMAT = cv2.COLOR_LAB2BGR
-HOW_MANY_TO_PLOT = 20
+HOW_MANY_TO_PLOT = 30
 
 for x, y in train_generator:
     if count >= HOW_MANY_TO_PLOT:
