@@ -6,7 +6,7 @@ FILE_NAME='imagenet_train.out'
 while :
 do
     printf '\n Running... \n'
-    sshpass -p '$@Jv.21301410' scp -P 25252 -r jcarvalho@tesla.dcc.ufrj.br:$FILE_NAME $FILE_NAME
+    scp -P 25252 -r jcarvalho@tesla.dcc.ufrj.br:$FILE_NAME $FILE_NAME
     tail $FILE_NAME
 	sleep 2
 done

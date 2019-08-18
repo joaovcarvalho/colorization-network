@@ -54,7 +54,7 @@ train_datagen = ImageDataGenerator(
         rescale=1./255,
 )
 
-data_folder = 'places/data/vision/torralba/deeplearning/images256'
+data_folder = 'places/test/data/vision/torralba/deeplearning/images256'
 
 data_generator = ColorizationDirectoryIterator(
         data_folder,

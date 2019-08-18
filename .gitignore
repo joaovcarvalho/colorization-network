@@ -13,3 +13,6 @@ imagenet_train.out
 .cache/
 *.out
 *.npy
+data_256/
+*.tar
+tesla/
