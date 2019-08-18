@@ -15,3 +15,6 @@ imagenet_train.out
 *.npy
 convolution/
 tensorboard/
+data_256/
+tesla/
+*.tar

@@ -90,5 +90,5 @@ for x, y in train_generator:
     result = np.append(result, original, axis=1)
 
     cv2.imshow('result', result)
-    cv2.waitKey(500)
+    cv2.waitKey(1000)
     # plot_activations(activations, model)

@@ -22,8 +22,8 @@ set_session(tf.Session(config=config))
 TARGET_SIZE = (64, 64)
 
 HOW_MANY_IMAGES_PER_EPOCH = 2.3e6
-NUM_EPOCHS = 4
-BATCH_SIZE = 30
+NUM_EPOCHS = 8
+BATCH_SIZE = 25
 STEPS_PER_EPOCH = HOW_MANY_IMAGES_PER_EPOCH / BATCH_SIZE
 SAVE_MODEL_EVERY_N_BATCHES = 500
 
@@ -35,8 +35,8 @@ if len(sys.argv) > 1:
 model.summary()
 
 # Parameters extracted from Colorful Image Colorization paper
-initial_learning_rate = 1 / 10e3
-optimizer = Adam(lr=initial_learning_rate, beta_1=.9, beta_2=.99, decay=.00)
+initial_learning_rate = 1 / 10e5
+optimizer = Adam(lr=initial_learning_rate, beta_1=.9, beta_2=.99, decay=.0001)
 
 
 def step_decay(epoch):
@@ -51,7 +51,7 @@ train_datagen = ImageDataGenerator(
     rescale=1. / 255,
 )
 
-data_folder = 'places/test/data/vision/torralba/deeplearning/images256'
+data_folder = 'places/test/data/vision/torralba/deeplearning/images256' 
 
 data_generator = ColorizationDirectoryIterator(
     data_folder,
