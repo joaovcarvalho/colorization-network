@@ -4,7 +4,7 @@ from keras.regularizers import l2
 
 DROPOUT_RATE = 0.5
 KERNEL_INITIALIZER = "glorot_normal"
-CNN_ACTIVATION = 'relu'
+CNN_ACTIVATION = "relu"
 OUTPUT_CHANNELS = 256
 
 
@@ -20,8 +20,6 @@ def add_conv_layer(depth, x, add_batch=False, strides=1, dilation_rate=1, kernel
         kernel_regularizer=l2(0.6)
     )(x)
 
-    # x = Dropout(0.5)(x)
-
     if add_batch:
         x = BatchNormalization()(x)
     return x
@@ -32,7 +30,7 @@ class ColorfyModelFactory(object):
         self.input_shape = input_shape
 
     def get_model(self):
-        net_input = Input(shape=self.input_shape, name='net_input')
+        net_input = Input(shape=self.input_shape, name="net_input")
 
         # Input Layer
         x = Conv2D(64,

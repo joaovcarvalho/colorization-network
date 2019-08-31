@@ -21,32 +21,26 @@ from image_preprocessing import ColorizationDirectoryIterator
 from model import ColorfyModelFactory
 from weights_saver_callback import WeightsSaverCallback
 
-TARGET_SIZE = (128, 128)
+TARGET_SIZE = (64, 64)
 
 NUM_EPOCHS = 10
-BATCH_SIZE = 10
-STEPS_PER_EPOCH = 150000
+BATCH_SIZE = 20
+STEPS_PER_EPOCH = 230000
 VALIDATION_STEPS = 1000
-SAVE_MODEL_EVERY_N_BATCHES = 500
+SAVE_MODEL_EVERY_N_BATCHES = 1000
 
 model = ColorfyModelFactory(TARGET_SIZE + (1,)).get_model()
 model.summary()
-
-# weights = np.load('weights.npy')
-# weights = 1 - weights
-# weights_v = K.constant(weights)
 
 
 def colorize_loss(y_true, y_pred):
     global weights_v
     mult = y_true - y_pred
     square = K.square(mult)
-    sum = K.sum(square, axis=(1, 2))
-    # weighted_sum = sum * weights_v
-    return K.sum(sum)
+    return K.sum(square)
 
 
-optimizer = Adam(lr=0.0001)
+optimizer = Adam(lr=0.00001)
 
 model.compile(optimizer=optimizer, loss=colorize_loss)
 
@@ -64,14 +58,10 @@ data_generator = ColorizationDirectoryIterator(
         class_mode='original',
 )
 
-tensor_board_callback = TensorBoard(
-    log_dir='./graph', histogram_freq=0, write_graph=True, write_images=True, write_grads=True
-)
-
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
                               patience=1, min_lr=0.000001)
 
-callbacks = [WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES), tensor_board_callback, reduce_lr]
+callbacks = [WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES), reduce_lr]
 
 model.fit_generator(
         data_generator,
