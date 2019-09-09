@@ -846,7 +846,7 @@ class ColorizationDirectoryIterator(Iterator):
                            interpolation=self.interpolation)
             if self.image_data_generator.preprocessing_function:
                 img = self.image_data_generator.preprocessing_function(img)
-            if self.target_size is not None:
+            if self.target_size is not None and False:
                 width_height_tuple = (self.target_size[1], self.target_size[0])
                 if img.size != width_height_tuple:
                     if self.interpolation not in _PIL_INTERPOLATION_METHODS:
@@ -859,6 +859,7 @@ class ColorizationDirectoryIterator(Iterator):
                     img = img.resize(width_height_tuple, resample)
 
             x = img_to_array(img, data_format=self.data_format)
+            x = x[:(self.target_size[0]), :(self.target_size[1])]
             x = x.astype('uint8')
             x = cv2.cvtColor(x, cv2.COLOR_RGB2LAB)\
                 .reshape(self.target_size + (3,))
