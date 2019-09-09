@@ -1,4 +1,6 @@
 import sys
+import math
+import time
 
 import cv2
 import numpy as np
@@ -18,7 +20,7 @@ model.load_weights(sys.argv[1])
 
 train_datagen = ImageDataGenerator(
         rescale=1./255,
-)
+        )
 
 train_generator = ColorizationDirectoryIterator(
         'imagenet',
@@ -26,15 +28,18 @@ train_generator = ColorizationDirectoryIterator(
         target_size=input_shape,
         batch_size=1,
         class_mode='original'
-)
+        )
 
-OUTPUT_SIZE = (400, 400)
-final_test_image = None
+OUTPUT_SIZE = (200, 200)
 
 count = 0
 
+HOW_MANY_IMAGES = 15
+
+images_collected = []
+
 for x, y in train_generator:
-    if count >= 1000:
+    if count >= HOW_MANY_IMAGES:
         break
     count += 1
 
@@ -72,21 +77,38 @@ for x, y in train_generator:
     x = cv2.resize(x, OUTPUT_SIZE).reshape(OUTPUT_SIZE[0], OUTPUT_SIZE[1], 1)
     x = cv2.cvtColor(x, cv2.COLOR_GRAY2BGR)
 
-    result = np.append(x, colorized, axis=1)
-    result = np.append(result, original, axis=1)
+    result = np.append(colorized, original, axis=1)
+    images_collected.append(result)
 
-    cv2.imshow('result', result)
-    cv2.waitKey(0)
-    #
-    # if final_test_image is not None:
-    #     final_test_image = np.append(final_test_image, result, axis=0)
-    # else:
-    #     final_test_image = result
+    # cv2.imshow('result', result)
+    # cv2.waitKey(1000)
 
-# import time
-#
-# timestr = time.strftime("%Y%m%d_%H%M%S")
-#
+timestr = time.strftime("%Y%m%d_%H%M%S")
+
+final_test_image = None
+rows = math.ceil(len(images_collected) / 3)
+
+rows_images = []
+
+current_image = None
+for i, image in enumerate(images_collected):
+    if current_image is not None:
+        current_image = np.append(current_image, image, axis=1)
+    else:
+        current_image = image
+
+    if i % 3 == 2:
+        rows_images.append(current_image)
+        current_image = None
+
+for row_image in rows_images:
+    print(row_image.shape)
+    if final_test_image is not None:
+        print(final_test_image.shape)
+        final_test_image = np.append(final_test_image, row_image, axis=0)
+    else:
+        final_test_image = row_image
+
 # cv2.imshow('test', final_test_image)
 # cv2.waitKey(0)
-# cv2.imwrite('results/results_{}.png'.format(timestr), final_test_image)
+cv2.imwrite('results/results_{}.png'.format(timestr), final_test_image)
