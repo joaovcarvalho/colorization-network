@@ -34,11 +34,8 @@ model.summary()
 
 
 def colorize_loss(y_true, y_pred):
-    global weights_v
-    mult = y_true - y_pred
-    square = K.square(mult)
-    return K.sum(square)
-
+    diff = y_true - y_pred
+    return K.sum(K.square(diff))
 
 optimizer = Adam(lr=0.00001)
 
