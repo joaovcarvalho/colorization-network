@@ -1,5 +1,6 @@
 from keras import Model, Input
 from keras.layers import Conv2D, Dropout, UpSampling2D, AveragePooling2D, BatchNormalization, Activation, Softmax
+from keras.layers.core import Activation
 from keras.regularizers import l2
 
 DROPOUT_RATE = 0.5
@@ -12,7 +13,6 @@ def add_conv_layer(depth, x, add_batch=False, strides=1, dilation_rate=1, kernel
     x = Conv2D(
         depth,
         (kernel_size, kernel_size),
-        activation=CNN_ACTIVATION,
         padding="same",
         strides=strides,
         dilation_rate=dilation_rate,
@@ -22,6 +22,8 @@ def add_conv_layer(depth, x, add_batch=False, strides=1, dilation_rate=1, kernel
 
     if add_batch:
         x = BatchNormalization()(x)
+
+    x = Activation(CNN_ACTIVATION)(x)
     return x
 
 
