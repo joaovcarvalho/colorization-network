@@ -16,3 +16,4 @@ imagenet_train.out
 data_256/
 *.tar
 tesla/
+venv/
