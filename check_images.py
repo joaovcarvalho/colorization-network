@@ -10,7 +10,7 @@ from image_preprocessing import _count_valid_files_in_directory, _list_valid_fil
 from quantization import quantize_lab_image
 
 # directory = 'imagenet'
-directory = 'places/data/vision/torralba/deeplearning/tmp'
+directory = 'places/test/data/vision/torralba/deeplearning/images256'
 
 classes = []
 
