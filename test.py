@@ -9,14 +9,27 @@ from keras.preprocessing.image import ImageDataGenerator
 from image_preprocessing import ColorizationDirectoryIterator
 from model import ColorfyModelFactory
 from quantization import convert_quantization_to_image
+from keras.optimizers import Adam
+import keras.backend as K
 
 img_rows = 128
 img_cols = 128
 
 input_shape = (img_rows, img_cols)
 
+def get_loss(weights):
+    def colorize_loss(y_true, y_pred):
+        only_pred = y_true * y_pred
+        diff = y_true - only_pred
+        weighted = K.sum(diff, axis=(0,1,2)) * weights
+        return K.sum(weighted)
+    return colorize_loss
+
+
 model = ColorfyModelFactory(input_shape + (1,)).get_model()
 model.load_weights(sys.argv[1])
+
+model.compile(Adam(), loss=get_loss(model.inputs[1]))
 
 train_datagen = ImageDataGenerator(
         rescale=1./255,
@@ -38,12 +51,14 @@ HOW_MANY_IMAGES = 15
 
 images_collected = []
 
-for x, y in train_generator:
+for [x, weights], y in train_generator:
     if count >= HOW_MANY_IMAGES:
         break
     count += 1
 
-    result = model.predict(x)
+    result = model.predict([x, weights])
+    loss = model.evaluate([x, weights], y)
+    print(loss)
 
     x = x.reshape(img_rows, img_cols, 1)
 
@@ -80,8 +95,8 @@ for x, y in train_generator:
     result = np.append(colorized, original, axis=1)
     images_collected.append(result)
 
-    # cv2.imshow('result', result)
-    # cv2.waitKey(1000)
+    cv2.imshow('result', result)
+    cv2.waitKey(0)
 
 timestr = time.strftime("%Y%m%d_%H%M%S")
 

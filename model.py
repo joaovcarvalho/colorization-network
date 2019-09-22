@@ -32,7 +32,8 @@ class ColorfyModelFactory(object):
         self.input_shape = input_shape
 
     def get_model(self):
-        net_input = Input(shape=self.input_shape, name="net_input")
+        net_input = Input(shape=self.input_shape, name="gray_image")
+        weights_input = Input(shape=(OUTPUT_CHANNELS,), name="weights")
 
         # Input Layer
         x = Conv2D(64,
@@ -77,6 +78,6 @@ class ColorfyModelFactory(object):
 
         x = Softmax(axis=2)(x)
 
-        model = Model(inputs=net_input, outputs=x)
+        model = Model(inputs=[net_input, weights_input], outputs=x)
 
         return model

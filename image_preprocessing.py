@@ -829,6 +829,13 @@ class ColorizationDirectoryIterator(Iterator):
 
         pool.close()
         pool.join()
+        try:
+            original_weights = np.load('weights.npy')
+            self.weights = np.tile(original_weights, batch_size)
+            self.weights = self.weights.reshape((batch_size, original_weights.shape[0]))
+        except Exception as e:
+            print(e)
+            self.weights = None
         super(ColorizationDirectoryIterator, self).__init__(self.samples, batch_size, shuffle, seed)
 
     def _get_batches_of_transformed_samples(self, index_array):
@@ -899,7 +906,12 @@ class ColorizationDirectoryIterator(Iterator):
                 batch_y[i, label] = 1.
         else:
             return batch_x
-        return batch_x, batch_y
+
+        if self.weights is not None:
+            weights = self.weights[:(batch_x.shape[0])]
+            return [batch_x, weights], batch_y
+        else:
+            return batch_x, batch_y
 
     def next(self):
         """For python 2.x.
