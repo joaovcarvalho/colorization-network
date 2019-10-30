@@ -3,13 +3,16 @@ import math
 import numpy as np
 
 
-def quantize_lab_image(lab_image, bins, max_value):
+def quantize_lab_image(lab_image, bins, max_value=None):
     # type: (np.ndarray, int, int) -> np.ndarray
+
+    if max_value is None:
+        max_value = 256
 
     ab_channels = lab_image[:, :, 1:]
 
-    division_factor = math.ceil(float(max_value) / float(bins))
-    ab_channels = (np.floor_divide(ab_channels, division_factor))
+    division_factor = math.floor(float(max_value) / float(bins))
+    ab_channels = np.floor_divide(ab_channels, division_factor)
 
     indexes = ab_channels[:, :, 0] * bins + ab_channels[:, :, 1]
 
@@ -31,8 +34,11 @@ def find_nearest(array, value):
     return idx
 
 
-def convert_quantization_to_image(quantization, bins, max_value):
+def convert_quantization_to_image(quantization, bins, max_value=None):
     # type: (np.ndarray, int) -> np.ndarray
+    if max_value is None:
+        max_value = 256
+
     image_shape = (quantization.shape[0], quantization.shape[1])
 
     # print(np.sort(np.unique(quantization)))

@@ -1,5 +1,6 @@
 from keras import Model, Input
-from keras.layers import Conv2D, Dropout, UpSampling2D, AveragePooling2D, BatchNormalization, Activation, Softmax
+from keras.layers import Conv2D, Dropout, UpSampling2D, AveragePooling2D, BatchNormalization, Activation, Softmax, \
+    Reshape
 from keras.layers.core import Activation
 from keras.regularizers import l2
 
@@ -17,7 +18,7 @@ def add_conv_layer(depth, x, add_batch=False, strides=1, dilation_rate=1, kernel
         strides=strides,
         dilation_rate=dilation_rate,
         kernel_initializer=KERNEL_INITIALIZER,
-        kernel_regularizer=l2(0.6)
+        kernel_regularizer=l2(0.01)
     )(x)
 
     if add_batch:
@@ -75,7 +76,13 @@ class ColorfyModelFactory(object):
                    padding="same",
                    kernel_initializer=KERNEL_INITIALIZER)(x)
 
-        x = Softmax(axis=2)(x)
+        # shape = x.output_shape
+        # shape_for_softmax = (shape[1] * shape[2], shape[3])
+        # x = Reshape(shape_for_softmax)(x)
+
+        x = Softmax(axis=-1)(x)
+
+        # x = Reshape(shape)(x)
 
         model = Model(inputs=net_input, outputs=x)
 

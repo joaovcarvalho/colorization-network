@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import time
 import traceback
 
 import cv2
@@ -858,32 +859,45 @@ class ColorizationDirectoryIterator(Iterator):
                     resample = _PIL_INTERPOLATION_METHODS[self.interpolation]
                     img = img.resize(width_height_tuple, resample)
 
+            # Resizing
             x = img_to_array(img, data_format=self.data_format)
             x = x[:(self.target_size[0]), :(self.target_size[1])]
+
+            # Data format
             x = x.astype('uint8')
             x = cv2.cvtColor(x, cv2.COLOR_RGB2LAB)\
                 .reshape(self.target_size + (3,))
             x = x.astype(K.floatx())
 
-            quantum = quantize_lab_image(x, BINS_SIZE, 255)
+            # Quantize
+            quantum = quantize_lab_image(x, BINS_SIZE)
             original_x[i] = quantum
 
             # x = self.image_data_generator.random_transform(x)
-            x = self.image_data_generator.standardize(x)
-
             batch_size = self.target_size + (CHANNELS_SIZE,)
 
+            l_channel = x[:, :, 0].reshape(batch_size)
+            l_channel = self.image_data_generator.standardize(l_channel)
+
             # Get only L channel from lab image
-            batch_x[i] = x[:, :, 0].reshape(batch_size)
+            batch_x[i] = l_channel
+
         # optionally save augmented images to disk for debugging purposes
         if self.save_to_dir:
             for i, j in enumerate(index_array):
-                img = array_to_img(batch_x[i], self.data_format, scale=True)
-                fname = '{prefix}_{index}_{hash}.{format}'.format(prefix=self.save_prefix,
-                                                                  index=j,
-                                                                  hash=np.random.randint(1e7),
-                                                                  format=self.save_format)
+                img = load_img(os.path.join(self.directory, self.filenames[j]),
+                               grayscale=False,
+                               target_size=None,
+                               interpolation=self.interpolation)
+
+                timestr = time.strftime("%Y%m%d_%H%M%S")
+
+                fname = '{prefix}_{index}.{format}'.format(prefix=self.save_prefix,
+                                                           index=timestr,
+                                                           hash=np.random.randint(1e7),
+                                                           format=self.save_format)
                 img.save(os.path.join(self.save_to_dir, fname))
+
         # build batch of labels
         if self.class_mode == 'input':
             batch_y = batch_x.copy()

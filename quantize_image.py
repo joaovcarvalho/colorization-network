@@ -13,8 +13,8 @@ image = cv2.cvtColor(original, cv2.COLOR_BGR2LAB)
 l_channel = image[:, :, 0]
 l_channel = l_channel.reshape((image.shape[0], image.shape[1], 1))
 
-quantum = quantize_lab_image(image, bins=BINS, max_value=255)
-color_space = convert_quantization_to_image(quantum, BINS, 255)
+quantum = quantize_lab_image(image, bins=BINS)
+color_space = convert_quantization_to_image(quantum, BINS)
 
 a = color_space[:, :, 0]
 b = color_space[:, :, 1]

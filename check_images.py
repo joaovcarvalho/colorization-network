@@ -1,3 +1,6 @@
+from multiprocessing.pool import ThreadPool
+
+import cv2
 import multiprocessing
 import os
 import traceback
@@ -6,11 +9,13 @@ from functools import partial
 import numpy as np
 from PIL import Image
 
-from image_preprocessing import _count_valid_files_in_directory, _list_valid_filenames_in_directory
+from image_preprocessing import \
+    _count_valid_files_in_directory, \
+    _list_valid_filenames_in_directory
 from quantization import quantize_lab_image
 
 # directory = 'imagenet'
-directory = 'places/test/data/vision/torralba/deeplearning/images256'
+directory = 'places/data/vision/torralba/deeplearning/images256'
 
 classes = []
 
@@ -19,17 +24,21 @@ white_list_formats = {'png', 'jpg', 'jpeg', 'bmp', 'ppm', 'tif', 'tiff'}
 for subdir in sorted(os.listdir(directory)):
     if os.path.isdir(os.path.join(directory, subdir)):
         classes.append(subdir)
+
 num_classes = len(classes)
 class_indices = dict(zip(classes, range(len(classes))))
 
-pool = multiprocessing.pool.ThreadPool()
+print('classes: {}'.format(classes))
+
+pool = ThreadPool()
 function_partial = partial(_count_valid_files_in_directory,
                            white_list_formats=white_list_formats,
                            follow_links=False,
                            split=None)
+
 samples = sum(pool.map(function_partial,
-                            (os.path.join(directory, subdir)
-                             for subdir in classes)))
+                       (os.path.join(directory, subdir)
+                        for subdir in classes)))
 
 # second, build an index of the images in the different class subfolders
 results = []
@@ -50,13 +59,13 @@ for res in results:
 pool.close()
 pool.join()
 
-pool = multiprocessing.pool.ThreadPool()
+pool = ThreadPool()
 
 lock = multiprocessing.Lock()
 
 NUM_BINS = 16
 
-final_sum = np.zeros((NUM_BINS**2))
+final_sum = np.zeros((NUM_BINS ** 2))
 pixels_count = 0
 image_count = 0
 
@@ -70,8 +79,14 @@ def check_image(filename, directory):
     final_path = os.path.join(directory, filename)
     try:
         image = Image.open(final_path)
-        x = np.asarray(image)
-        quantum = quantize_lab_image(x, NUM_BINS, 255)
+        rgb_im = image.convert('RGB')
+        x = np.asarray(rgb_im)
+
+        x = x.astype('uint8')
+        x = cv2.cvtColor(x, cv2.COLOR_RGB2LAB)
+        x = x.astype('float')
+
+        quantum = quantize_lab_image(x, NUM_BINS, 256)
         sum = np.sum(quantum, axis=(0, 1))
 
         with lock:
