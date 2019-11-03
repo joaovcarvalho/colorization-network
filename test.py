@@ -31,7 +31,7 @@ train_generator = ColorizationDirectoryIterator(
         class_mode='original'
         )
 
-OUTPUT_SIZE = (200, 200)
+OUTPUT_SIZE = (300, 300)
 
 count = 0
 
@@ -40,7 +40,7 @@ HOW_MANY_IMAGES = 100
 images_collected = []
 
 DISPLAY_IMAGE = True
-DISPLAY_DISTRIBUTION = True
+DISPLAY_DISTRIBUTION = False
 SAVE_DISTRIBUTION = False
 SAVE_TEST_IMAGES = False
 
@@ -105,6 +105,8 @@ for x, y in train_generator:
 
     if DISPLAY_DISTRIBUTION:
         plot_weights(current_sum / pixels_count)
+    else:
+        cv2.waitKey(2000)
 
     if SAVE_DISTRIBUTION:
         plot_weights(current_sum / pixels_count, 'distributions/distribution_{}'.format(img_index))
