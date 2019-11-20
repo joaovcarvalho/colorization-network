@@ -76,13 +76,7 @@ class ColorfyModelFactory(object):
                    padding="same",
                    kernel_initializer=KERNEL_INITIALIZER)(x)
 
-        # shape = x.output_shape
-        # shape_for_softmax = (shape[1] * shape[2], shape[3])
-        # x = Reshape(shape_for_softmax)(x)
-
         x = Softmax(axis=-1)(x)
-
-        # x = Reshape(shape)(x)
 
         model = Model(inputs=net_input, outputs=x)
 

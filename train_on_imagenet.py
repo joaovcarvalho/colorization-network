@@ -18,7 +18,7 @@ TARGET_SIZE = (64, 64)
 
 NUM_EPOCHS = 10
 BATCH_SIZE = 30
-HOW_MANY_IMAGES = 1000000
+HOW_MANY_IMAGES = 2000000
 STEPS_PER_EPOCH = math.floor(HOW_MANY_IMAGES / BATCH_SIZE)
 VALIDATION_STEPS = 1000
 SAVE_MODEL_EVERY_N_BATCHES = 1000
@@ -27,8 +27,7 @@ INPUT_SHAPE = TARGET_SIZE + (1,)
 
 model = ColorfyModelFactory(INPUT_SHAPE).get_model()
 
-NB_CLASSES = 256
-
+# NB_CLASSES = 256
 # model = load(NB_CLASSES, INPUT_SHAPE, BATCH_SIZE)
 model.summary()
 
@@ -40,17 +39,13 @@ USE_WEIGHTS = False
 
 def get_loss_with_weights(prior_distribution):
     def loss_function(y_true, y_pred):
-        diff = y_true - y_pred
-        normalized_diff = K.abs(diff)
-        distribution = K.sum(normalized_diff, axis=(1, 2))  # Sum over all channels
-
         if USE_WEIGHTS:
-            distribution = distribution * (prior_distribution + 1e-2)
+            y_true = y_true * prior_distribution
 
-        # Add little factor to avoid multiplying by zero
-        batch_sum = K.sum(distribution, axis=1)
-
-        return K.mean(batch_sum)
+        diff = y_true - y_pred
+        squared_diff = K.square(diff)
+        distribution = K.sum(squared_diff)
+        return distribution
 
     return loss_function
 
@@ -65,7 +60,7 @@ def colorize_loss(y_true, y_pred):
 LEARNING_RATE = 1e-5
 optimizer = Adam(lr=LEARNING_RATE)
 
-model.compile(optimizer=optimizer, loss=colorize_loss)
+model.compile(optimizer=optimizer, loss=get_loss_with_weights(weights))
 
 train_datagen = ImageDataGenerator(
     rescale=1. / 255,
