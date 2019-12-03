@@ -1,16 +1,20 @@
 import math
-import numpy as np
 
 import keras.backend as K
+import numpy as np
+import wandb
 from PIL import ImageFile
-from keras.callbacks import ReduceLROnPlateau
+from keras.callbacks import LearningRateScheduler
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
+from wandb.keras import WandbCallback
 
 from image_preprocessing import ColorizationDirectoryIterator
 from model import ColorfyModelFactory
 # from models.models_colorful import load
 from weights_saver_callback import WeightsSaverCallback
+
+wandb.init(project="colorization")
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -18,9 +22,9 @@ TARGET_SIZE = (64, 64)
 
 NUM_EPOCHS = 10
 BATCH_SIZE = 30
-HOW_MANY_IMAGES = 2000000
+HOW_MANY_IMAGES = 1000000
 STEPS_PER_EPOCH = math.floor(HOW_MANY_IMAGES / BATCH_SIZE)
-VALIDATION_STEPS = 1000
+VALIDATION_STEPS = 100
 SAVE_MODEL_EVERY_N_BATCHES = 1000
 
 INPUT_SHAPE = TARGET_SIZE + (1,)
@@ -43,6 +47,8 @@ def get_loss_with_weights(prior_distribution):
             y_true = y_true * prior_distribution
 
         diff = y_true - y_pred
+
+        # TODO Modificar para utilizar o abs e mean
         squared_diff = K.square(diff)
         distribution = K.sum(squared_diff)
         return distribution
@@ -67,7 +73,7 @@ train_datagen = ImageDataGenerator(
 )
 
 data_folder = 'places/data/vision/torralba/deeplearning/images256'
-# data_folder = 'imagenet'
+# data_folder = '../places-dataset'
 
 data_generator = ColorizationDirectoryIterator(
     data_folder,
@@ -77,10 +83,21 @@ data_generator = ColorizationDirectoryIterator(
     class_mode='original',
 )
 
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
-                              patience=1, min_lr=0.000001)
 
-callbacks = [WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES), reduce_lr]
+def schedule_policy(index, lr):
+    if index == 0:
+        return LEARNING_RATE
+
+    return lr * 0.5
+
+
+schedule_learning_rate = LearningRateScheduler(schedule_policy)
+
+callbacks = [
+    WeightsSaverCallback(model, every=SAVE_MODEL_EVERY_N_BATCHES),
+    schedule_learning_rate,
+    WandbCallback()
+]
 
 model.fit_generator(
     data_generator,
@@ -89,4 +106,6 @@ model.fit_generator(
     validation_data=data_generator,
     validation_steps=VALIDATION_STEPS,
     callbacks=callbacks,
+    use_multiprocessing=True,
+    workers=8
 )

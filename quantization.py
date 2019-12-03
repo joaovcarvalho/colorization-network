@@ -64,3 +64,36 @@ def convert_quantization_to_image(quantization, bins, max_value=None):
     b_channel = b_channel.reshape(image_shape[0], image_shape[1], 1)
 
     return np.concatenate((a_channel, b_channel), axis=2)
+
+
+def convert_quantization_to_image_average(quantization, bins, max_value=None, how_many_to_average=1):
+    # type: (np.ndarray, int) -> np.ndarray
+    image_shape = (quantization.shape[0], quantization.shape[1])
+
+    if max_value is None:
+        max_value = 256
+
+    # print(np.sort(np.unique(quantization)))
+    sorted_index = np.argsort(-quantization, axis=2)
+    final_image = None
+    for i in range(how_many_to_average):
+        indexes = sorted_index[:, :, i]
+
+        division_factor = math.floor(float(max_value) / float(bins))
+        a_channel = np.floor_divide(indexes, bins)
+        b_channel = np.remainder(indexes, bins)
+
+        a_channel = a_channel * float(division_factor)
+        b_channel = b_channel * float(division_factor)
+
+        a_channel = a_channel.reshape(image_shape[0], image_shape[1], 1)
+        b_channel = b_channel.reshape(image_shape[0], image_shape[1], 1)
+
+        image = np.concatenate((a_channel, b_channel), axis=2)
+
+        if i == 0:
+            final_image = image
+        else:
+            final_image = 2*final_image + image
+            final_image /= 3
+    return final_image

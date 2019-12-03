@@ -15,7 +15,8 @@ from image_preprocessing import \
 from quantization import quantize_lab_image
 
 # directory = 'imagenet'
-directory = 'places/data/vision/torralba/deeplearning/images256'
+# directory = 'places/data/vision/torralba/deeplearning/images256'
+directory = '../places-dataset'
 
 classes = []
 
@@ -65,7 +66,7 @@ lock = multiprocessing.Lock()
 
 NUM_BINS = 16
 
-final_sum = np.zeros((NUM_BINS ** 2))
+final_sum = 0.0
 pixels_count = 0
 image_count = 0
 
@@ -86,17 +87,21 @@ def check_image(filename, directory):
         x = cv2.cvtColor(x, cv2.COLOR_RGB2LAB)
         x = x.astype('float')
 
-        quantum = quantize_lab_image(x, NUM_BINS, 256)
-        sum = np.sum(quantum, axis=(0, 1))
+        subject = np.abs(x[:, :, 0] - 119.85)
+        assert subject.shape == (256, 256)
+
+        # subject = quantize_lab_image(x, NUM_BINS, 256)
+        sum = np.sum(subject)
 
         with lock:
             final_sum += sum
-            pixels_count += quantum.shape[0] * quantum.shape[1]
+            pixels_count += subject.shape[0] * subject.shape[1]
             image_count += 1
 
             if image_count % PRINT_EVERY_N_IMAGES == 0:
-                weights = final_sum / pixels_count
-                np.save('weights.npy', weights)
+                weights = np.sqrt(final_sum / pixels_count)
+                print(weights)
+                np.save('std.npy', weights)
 
     except Exception as e:
         print(e)
@@ -107,5 +112,5 @@ print('How many images: {}'.format(len(filenames)))
 pool.map(partial(check_image, directory=directory), filenames)
 pool.join()
 
-weights = final_sum / pixels_count
-np.save('weights', weights)
+# weights = final_sum / pixels_count
+# np.save('weights', weights)
