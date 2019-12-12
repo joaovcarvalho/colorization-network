@@ -10,7 +10,14 @@ lines = [line.split()[-1] for line in loss_line.split("\x08") if line is not '']
 lines = [re.sub("[^0-9\.]", "", line) for line in lines]
 lines = [line for line in lines if line != '']
 
-numbers = map(float, lines)
+def convert_to_number(text):
+    try:
+        return float(text)
+    except:
+        return None
+
+numbers = map(convert_to_number, lines)
+numbers = filter(lambda x: x is not None, numbers)
 data = np.array(numbers)
 data = data / np.max(data)
 

@@ -16,13 +16,15 @@ from weights_saver_callback import WeightsSaverCallback
 
 wandb.init(project="colorization")
 
+K.clear_session()
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 TARGET_SIZE = (64, 64)
 
 NUM_EPOCHS = 10
 BATCH_SIZE = 30
-HOW_MANY_IMAGES = 1000000
+HOW_MANY_IMAGES = 2000000
 STEPS_PER_EPOCH = math.floor(HOW_MANY_IMAGES / BATCH_SIZE)
 VALIDATION_STEPS = 100
 SAVE_MODEL_EVERY_N_BATCHES = 1000
@@ -48,12 +50,29 @@ def get_loss_with_weights(prior_distribution):
 
         diff = y_true - y_pred
 
-        # TODO Modificar para utilizar o abs e mean
-        squared_diff = K.square(diff)
-        distribution = K.sum(squared_diff)
-        return distribution
+        squared_diff = K.abs(diff)
+        distribution = K.sum(squared_diff, axis=(1, 2, 3))
+        return K.mean(distribution)
 
     return loss_function
+
+
+def categorical_crossentropy_color(y_true, y_pred):
+    # Flatten
+    shape = K.shape(y_true)
+    n = shape[0]
+    h = shape[1]
+    w = shape[2]
+    q = shape[3]
+
+    y_true = K.reshape(y_true, (n * h * w, q))
+    y_pred = K.reshape(y_pred, (n * h * w, q))
+
+    cross_ent = K.categorical_crossentropy(y_pred, y_true)
+    # cross_ent = K.mean(cross_ent, axis=-1)
+    cross_ent = K.sum(cross_ent)
+
+    return cross_ent
 
 
 def colorize_loss(y_true, y_pred):
@@ -64,9 +83,9 @@ def colorize_loss(y_true, y_pred):
 
 
 LEARNING_RATE = 1e-5
-optimizer = Adam(lr=LEARNING_RATE)
+optimizer = Adam(lr=LEARNING_RATE, beta_1=0.9, beta_2=0.99)
 
-model.compile(optimizer=optimizer, loss=get_loss_with_weights(weights))
+model.compile(optimizer=optimizer, loss=colorize_loss)
 
 train_datagen = ImageDataGenerator(
     rescale=1. / 255,

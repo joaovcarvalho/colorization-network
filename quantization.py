@@ -66,6 +66,17 @@ def convert_quantization_to_image(quantization, bins, max_value=None):
     return np.concatenate((a_channel, b_channel), axis=2)
 
 
+def get_prob(quantization, indices):
+    prob = np.zeros(indices.shape + (1,))
+
+    for i in range(indices.shape[0]):
+        for j in range(indices.shape[1]):
+            index = indices[i, j]
+            prob[i, j, 0] = quantization[i, j, index]
+
+    return prob
+
+
 def convert_quantization_to_image_average(quantization, bins, max_value=None, how_many_to_average=1):
     # type: (np.ndarray, int) -> np.ndarray
     image_shape = (quantization.shape[0], quantization.shape[1])
@@ -78,6 +89,10 @@ def convert_quantization_to_image_average(quantization, bins, max_value=None, ho
     final_image = None
     for i in range(how_many_to_average):
         indexes = sorted_index[:, :, i]
+        prob = get_prob(quantization, indexes)
+
+        if np.all(prob == 0):
+            return final_image
 
         division_factor = math.floor(float(max_value) / float(bins))
         a_channel = np.floor_divide(indexes, bins)
@@ -92,8 +107,35 @@ def convert_quantization_to_image_average(quantization, bins, max_value=None, ho
         image = np.concatenate((a_channel, b_channel), axis=2)
 
         if i == 0:
-            final_image = image
+            final_image = image * prob
         else:
-            final_image = 2*final_image + image
-            final_image /= 3
+            final_image = final_image + image * prob
     return final_image
+
+
+def convert_quantization_to_image_expected(quantization, bins, max_value=None):
+    image_shape = (quantization.shape[0], quantization.shape[1])
+
+    if max_value is None:
+        max_value = 256
+
+    # print(np.sort(np.unique(quantization)))
+    indices = np.ones((image_shape[0] * image_shape[1], 256)) * np.arange(256)
+    reshaped_image = quantization.reshape((image_shape[0] * image_shape[1], 256))
+
+    average = np.average(indices, axis=1, weights=reshaped_image)
+    indexes = average.reshape(image_shape)
+
+    division_factor = math.floor(float(max_value) / float(bins))
+    a_channel = np.floor_divide(indexes, bins)
+    b_channel = np.remainder(indexes, bins)
+
+    a_channel = a_channel * float(division_factor)
+    b_channel = b_channel * float(division_factor)
+
+    a_channel = a_channel.reshape(image_shape[0], image_shape[1], 1)
+    b_channel = b_channel.reshape(image_shape[0], image_shape[1], 1)
+
+    image = np.concatenate((a_channel, b_channel), axis=2)
+    return image
+

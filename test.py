@@ -9,7 +9,8 @@ from keras.preprocessing.image import ImageDataGenerator
 from image_preprocessing import ColorizationDirectoryIterator
 from model import ColorfyModelFactory
 from plot_weights import plot_weights
-from quantization import convert_quantization_to_image, convert_quantization_to_image_average
+from quantization import convert_quantization_to_image, convert_quantization_to_image_average, \
+    convert_quantization_to_image_expected
 from visualize_activations import get_activation_model, plot_activations
 
 img_rows = 128
@@ -30,9 +31,10 @@ train_generator = ColorizationDirectoryIterator(
         target_size=input_shape,
         batch_size=1,
         class_mode='original',
+        seed=1,
         )
 
-OUTPUT_SIZE = (128, 128)
+OUTPUT_SIZE = (256, 256)
 
 count = 0
 
@@ -40,10 +42,10 @@ HOW_MANY_IMAGES = 30
 
 images_collected = []
 
-DISPLAY_IMAGE = False
+DISPLAY_IMAGE = True
 DISPLAY_DISTRIBUTION = False
-SAVE_DISTRIBUTION = False
-SAVE_TEST_IMAGES = True
+SAVE_DISTRIBUTION = True
+SAVE_TEST_IMAGES = False
 
 SAVE_ACTIVATIONS = True
 
@@ -54,7 +56,8 @@ activation_model = get_activation_model(model)
 
 def get_image_from_network_result(result, l_channel, use_average=True):
     if use_average:
-        color_space = convert_quantization_to_image_average(result, 16, 256, 3)
+        color_space = convert_quantization_to_image_average(result, 16, 256, 256)
+        # color_space = convert_quantization_to_image_expected(result, 16, 256)
     else:
         color_space = convert_quantization_to_image(result, 16, 256)
 
@@ -79,10 +82,23 @@ for input, y in train_generator:
 
     if SAVE_ACTIVATIONS:
         activations = activation_model.predict(input)
+        plot_activations(activations, model, count)
 
     x = input.reshape(img_rows, img_cols, 1)
 
     prediction = batch_result[0]
+
+    h, w, nb_q = prediction.shape
+
+    # Format X_colorized
+    X_colorized = prediction.reshape((1 * h * w, nb_q))
+
+    # Reweight probas
+    X_colorized = np.exp(np.log(X_colorized) / 0.38)
+    X_colorized = X_colorized / np.sum(X_colorized, 1)[:, np.newaxis]
+
+    prediction = X_colorized.reshape((h, w, nb_q))
+
     bins = 16
 
     x *= 7.61
@@ -109,9 +125,6 @@ for input, y in train_generator:
 
     if DISPLAY_IMAGE:
         cv2.imshow('result', result)
-
-    if SAVE_ACTIVATIONS:
-        plot_activations(activations, model, count)
 
     if DISPLAY_DISTRIBUTION:
         plot_weights(current_sum / pixels_count)
