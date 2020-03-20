@@ -8,4 +8,3 @@ rsync -r -v -e \
 	--exclude=tesla/ --exclude=*.out --exclude=tensorboard/ --exclude=*.tar \
 	--exclude=data_256/ --exclude=imagenet/ --exclude=tesla/
 
-# ssh -p 25252 jcarvalho@tesla.dcc.ufrj.br "nohup python cnn_model.py &"
