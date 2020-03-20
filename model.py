@@ -22,6 +22,7 @@ def add_inception_layer(depth, layer_input):
     tower_3 = Conv2D(depth, (1, 1), padding='same', activation=CNN_ACTIVATION)(tower_3)
 
     output = concatenate([tower_1, tower_2, tower_3], axis=3)
+    output = BatchNormalization()(output)
     return output
 
 
@@ -33,6 +34,7 @@ def add_conv_layer(depth, x, add_batch=False, strides=1, dilation_rate=1, kernel
         strides=strides,
         dilation_rate=dilation_rate,
         kernel_initializer=KERNEL_INITIALIZER,
+        kernel_regularizer=l2(0.01),
     )(x)
 
     if add_batch:
@@ -61,29 +63,26 @@ class ColorfyModelFactory(object):
         x = add_conv_layer(64, x)
         half_size = add_conv_layer(64, x)
         x = add_conv_layer(128, half_size, add_batch=True, strides=2)
-        x = add_inception_layer(128, x)
-        x = add_inception_layer(128, x)
-        quarter_size = add_inception_layer(128, x)
+        x = add_conv_layer(128, x)
+        x = add_conv_layer(128, x)
+        quarter_size = add_conv_layer(128, x)
         x = add_conv_layer(256, quarter_size, add_batch=True, strides=2)
-        x = add_inception_layer(256, x)
-        x = add_inception_layer(256, x)
-        x = add_inception_layer(256, x)
+        x = add_conv_layer(256, x)
+        x = add_conv_layer(256, x)
+        x = add_conv_layer(256, x)
         x = add_conv_layer(256, x, add_batch=True)
-        x = add_inception_layer(256, x)
-        x = add_inception_layer(256, x)
-        x = add_inception_layer(256, x)
+        x = add_conv_layer(512, x)
+        x = add_conv_layer(512, x)
+        x = add_conv_layer(512, x)
         x = add_conv_layer(512, x, add_batch=True)
         x = UpSampling2D()(x)
-        # x = concatenate([x, quarter_size], axis=3)
         x = add_conv_layer(256, x)
         x = add_conv_layer(256, x)
         x = add_conv_layer(256, x, add_batch=True)
         x = UpSampling2D()(x)
-        # x = concatenate([x, half_size], axis=3)
         x = add_conv_layer(128, x)
         x = add_conv_layer(128, x)
         x = UpSampling2D()(x)
-        # x = concatenate([x, original_size], axis=3)
         x = add_conv_layer(64, x)
         x = add_conv_layer(64, x)
         x = add_conv_layer(64, x)

@@ -129,7 +129,7 @@ for input, y in train_generator:
     if DISPLAY_DISTRIBUTION:
         plot_weights(current_sum / pixels_count)
     elif DISPLAY_IMAGE:
-        cv2.waitKey(0)
+        cv2.waitKey(1000)
 
     if SAVE_DISTRIBUTION:
         plot_weights(current_sum / pixels_count, 'distributions/distribution_{}'.format(img_index))
