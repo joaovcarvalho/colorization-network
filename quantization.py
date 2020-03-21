@@ -41,17 +41,8 @@ def convert_quantization_to_image(quantization, bins, max_value=None):
 
     image_shape = (quantization.shape[0], quantization.shape[1])
 
-    # print(np.sort(np.unique(quantization)))
     sorted_index = np.argsort(-quantization, axis=2)
     indexes = sorted_index[:, :, 0]
-    # indexes = np.argmax(quantization, axis=2)
-    # indexes = np.zeros((quantization.shape[0], quantization.shape[1]))
-    # for i in range(quantization.shape[0]):
-    #     for j in range(quantization.shape[1]):
-    #         pixel_distribution = quantization[i, j]
-    #         nonzero_indexes = np.nonzero(pixel_distribution)
-    #         mean = np.mean(nonzero_indexes)
-    #         indexes[i, j] = mean
 
     division_factor = math.floor(float(max_value) / float(bins))
     a_channel = np.floor_divide(indexes, bins)
@@ -84,7 +75,6 @@ def convert_quantization_to_image_average(quantization, bins, max_value=None, ho
     if max_value is None:
         max_value = 256
 
-    # print(np.sort(np.unique(quantization)))
     sorted_index = np.argsort(-quantization, axis=2)
     final_image = None
     for i in range(how_many_to_average):
@@ -119,7 +109,6 @@ def convert_quantization_to_image_expected(quantization, bins, max_value=None):
     if max_value is None:
         max_value = 256
 
-    # print(np.sort(np.unique(quantization)))
     indices = np.ones((image_shape[0] * image_shape[1], 256)) * np.arange(256)
     reshaped_image = quantization.reshape((image_shape[0] * image_shape[1], 256))
 
