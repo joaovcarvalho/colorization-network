@@ -56,7 +56,9 @@ activation_model = get_activation_model(model)
 
 def get_image_from_network_result(result, l_channel, use_average=True):
     if use_average:
-        color_space = convert_quantization_to_image_average(result, 16, 256, 256)
+        color_space = convert_quantization_to_image_average(
+                result, 16, 256, 256
+        )
     else:
         color_space = convert_quantization_to_image(result, 16, 256)
 
@@ -71,7 +73,8 @@ def get_image_from_network_result(result, l_channel, use_average=True):
     colorized = cv2.cvtColor(resized_image, cv2.COLOR_LAB2BGR)
     return colorized, lab_original
 
-def reformat_image(image):
+def reformat_image(lab_image):
+    image = lab_image[:, :, 1:]
     shape = image.shape
     new_shape = (shape[0] * shape[1], shape[2])
     reshaped_image = np.reshape(image, new_shape)
@@ -90,6 +93,8 @@ def compare_lab_images(first_image, second_image, threshold=20):
 def plot_graph(data):
     x = range(len(data))
     plt.plot(x, data)
+    plt.xlabel('Threshold')
+    plt.ylabel('Accuracy(%)')
     plt.show()
 
 
@@ -150,7 +155,7 @@ for input, y in train_generator:
         cv2.waitKey(1000)
 
     cumulative_accuracy = [
-        compare_lab_images(lab_image, lab_original, i)
+        compare_lab_images(lab_image, lab_original, i) * 100
         for i in range(256)
     ]
 
