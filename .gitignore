@@ -19,3 +19,5 @@ tesla/
 venv/
 distributions/
 activations/
+accuracy/
+colorful/

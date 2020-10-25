@@ -877,7 +877,6 @@ class ColorizationDirectoryIterator(Iterator):
             batch_size = self.target_size + (CHANNELS_SIZE,)
 
             l_channel = x[:, :, 0].reshape(batch_size)
-            # l_channel = self.image_data_generator.standardize(l_channel)
 
             # Normalization
             l_channel = (l_channel - 119.85) / 7.61
